@@ -1,0 +1,40 @@
+[sqlfluff]
+templater = dbt
+# Models compile against the DuckDB target for linting; the SQL is shared by
+# both engines, so engine-specific syntax lives only in dispatched macros.
+dialect = duckdb
+max_line_length = 120
+# ST06 (column order) fights readable grouping of keys, dates and measures.
+exclude_rules = ST06
+
+[sqlfluff:templater:dbt]
+profile = marketplace
+target = duckdb
+
+[sqlfluff:indentation]
+tab_space_size = 4
+
+[sqlfluff:rules:capitalisation.keywords]
+capitalisation_policy = lower
+
+[sqlfluff:rules:capitalisation.functions]
+extended_capitalisation_policy = lower
+
+[sqlfluff:rules:capitalisation.literals]
+capitalisation_policy = lower
+
+[sqlfluff:rules:capitalisation.types]
+extended_capitalisation_policy = lower
+
+[sqlfluff:rules:aliasing.table]
+aliasing = explicit
+
+[sqlfluff:rules:aliasing.column]
+aliasing = explicit
+
+[sqlfluff:rules:ambiguous.column_references]
+group_by_and_order_by_style = consistent
+
+[sqlfluff:rules:references.keywords]
+# Raw/business column names we keep as-is.
+ignore_words = date,timezone

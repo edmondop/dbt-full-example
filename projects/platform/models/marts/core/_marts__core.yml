@@ -1,0 +1,56 @@
+models:
+  - name: dim__calendar
+    description: One row per calendar day in [var('start_date'), var('end_date')].
+    access: public
+    config:
+      contract: {enforced: true}
+    columns:
+      - {name: date_day, data_type: date, constraints: [{type: not_null}], data_tests: [unique]}
+      - {name: month_start, data_type: date}
+      - {name: calendar_year, data_type: integer}
+      - {name: iso_day_of_week, data_type: integer, description: Monday = 1 ... Sunday = 7}
+      - {name: is_weekend, data_type: boolean}
+
+  - name: dim__customers
+    description: One row per customer. No PII.
+    access: public
+    config:
+      contract: {enforced: true}
+    columns:
+      - {name: customer_id, data_type: bigint, constraints: [{type: not_null}], data_tests: [unique]}
+      - {name: country_code, data_type: varchar}
+      - {name: signup_date, data_type: date, description: "Signup day in var('business_timezone')."}
+
+  - name: dim__merchants
+    description: One row per merchant.
+    access: public
+    config:
+      contract: {enforced: true}
+    columns:
+      - {name: merchant_id, data_type: bigint, constraints: [{type: not_null}], data_tests: [unique]}
+      - {name: merchant_name, data_type: varchar}
+      - {name: country_code, data_type: varchar}
+      - {name: currency_code, data_type: varchar, description: Settlement currency.}
+      - {name: timezone, data_type: varchar, description: IANA time zone of the merchant.}
+
+  - name: fct__orders
+    description: One row per order, amount in the order currency (major units).
+    access: public
+    config:
+      contract: {enforced: true}
+    columns:
+      - {name: order_id, data_type: bigint, constraints: [{type: not_null}], data_tests: [unique]}
+      - name: customer_id
+        data_type: bigint
+        data_tests:
+          - relationships:
+              arguments: {to: ref('dim__customers'), field: customer_id}
+      - name: merchant_id
+        data_type: bigint
+        data_tests:
+          - relationships:
+              arguments: {to: ref('dim__merchants'), field: merchant_id}
+      - {name: order_date, data_type: date, description: "Order day in var('business_timezone')."}
+      - {name: order_status, data_type: varchar}
+      - {name: currency_code, data_type: varchar}
+      - {name: order_amount, data_type: "decimal(18, 4)"}

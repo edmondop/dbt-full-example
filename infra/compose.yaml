@@ -1,0 +1,121 @@
+name: dbt-full-example
+
+x-lakekeeper-env: &lakekeeper-env
+  LAKEKEEPER__PG_ENCRYPTION_KEY: local-dev-only-not-secure
+  LAKEKEEPER__PG_DATABASE_URL_READ: postgresql://postgres:postgres@catalog-db:5432/postgres
+  LAKEKEEPER__PG_DATABASE_URL_WRITE: postgresql://postgres:postgres@catalog-db:5432/postgres
+  RUST_LOG: info
+
+services:
+  garage:
+    image: dxflrs/garage:v2.4.1
+    environment:
+      GARAGE_RPC_SECRET: ${GARAGE_RPC_SECRET}
+      GARAGE_ADMIN_TOKEN: ${GARAGE_ADMIN_TOKEN}
+    volumes:
+      - ./garage/garage.toml:/etc/garage.toml:ro
+      - garage-meta:/var/lib/garage/meta
+      - garage-data:/var/lib/garage/data
+    healthcheck:
+      test: ["CMD", "/garage", "status"]
+      interval: 2s
+      retries: 15
+    ports:
+      - "3900:3900"
+
+  garage-init:
+    image: python:3.13-alpine
+    depends_on:
+      garage:
+        condition: service_healthy
+    environment:
+      GARAGE_ADMIN_TOKEN: ${GARAGE_ADMIN_TOKEN}
+      S3_ACCESS_KEY: ${S3_ACCESS_KEY}
+      S3_SECRET_KEY: ${S3_SECRET_KEY}
+    volumes:
+      - ./garage/init.py:/init.py:ro
+    command: ["python", "/init.py"]
+    restart: "no"
+
+  catalog-db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - catalog-db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 2s
+      retries: 15
+
+  lakekeeper-migrate:
+    image: quay.io/lakekeeper/catalog:v0.13.6
+    environment: *lakekeeper-env
+    command: ["migrate"]
+    depends_on:
+      catalog-db:
+        condition: service_healthy
+    restart: "no"
+
+  lakekeeper:
+    image: quay.io/lakekeeper/catalog:v0.13.6
+    environment: *lakekeeper-env
+    command: ["serve"]
+    depends_on:
+      lakekeeper-migrate:
+        condition: service_completed_successfully
+      garage-init:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "/home/nonroot/lakekeeper", "healthcheck"]
+      interval: 2s
+      retries: 15
+    ports:
+      - "8181:8181"
+
+  lakekeeper-init:
+    image: curlimages/curl:8.16.0
+    depends_on:
+      lakekeeper:
+        condition: service_healthy
+    environment:
+      S3_ACCESS_KEY: ${S3_ACCESS_KEY}
+      S3_SECRET_KEY: ${S3_SECRET_KEY}
+    volumes:
+      - ./lakekeeper-warehouse.json:/warehouse.json.tpl:ro
+    entrypoint: ["/bin/sh", "-ec"]
+    # Bootstrap is idempotent-tolerant: a second run returns 4xx for an existing
+    # bootstrap/warehouse, which is accepted; any 5xx fails the stack.
+    command:
+      - |
+        sed -e "s|\$${S3_ACCESS_KEY}|$$S3_ACCESS_KEY|" -e "s|\$${S3_SECRET_KEY}|$$S3_SECRET_KEY|" /warehouse.json.tpl > /tmp/warehouse.json
+        post() { code=$$(curl -s -o /tmp/out -w '%{http_code}' -X POST -H 'Content-Type: application/json' --data "$$2" "http://lakekeeper:8181/management/v1/$$1"); echo "$$1 -> $$code"; cat /tmp/out; echo; [ "$$code" -lt 500 ]; }
+        post bootstrap '{"accept-terms-of-use": true}'
+        post warehouse @/tmp/warehouse.json
+    restart: "no"
+
+  trino:
+    image: trinodb/trino:483
+    # The image sizes the JVM heap at 80% of visible memory (MaxRAMPercentage).
+    # Without a cgroup limit that is 80% of the host; cap it for laptops and CI.
+    mem_limit: 4g
+    depends_on:
+      lakekeeper-init:
+        condition: service_completed_successfully
+    environment:
+      S3_ACCESS_KEY: ${S3_ACCESS_KEY}
+      S3_SECRET_KEY: ${S3_SECRET_KEY}
+      S3_REGION: ${S3_REGION}
+    volumes:
+      - ./trino/catalog:/etc/trino/catalog:ro
+    healthcheck:
+      test: ["CMD", "/usr/lib/trino/bin/health-check"]
+      interval: 3s
+      retries: 40
+    ports:
+      - "${TRINO_PORT:-8080}:8080"
+
+volumes:
+  garage-meta:
+  garage-data:
+  catalog-db:

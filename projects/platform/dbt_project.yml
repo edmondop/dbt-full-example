@@ -1,0 +1,50 @@
+name: platform
+version: "0.1.0"
+config-version: 2
+profile: marketplace
+require-dbt-version: [">=1.12.0", "<1.13.0"]
+
+model-paths: ["models"]
+macro-paths: ["macros"]
+test-paths: ["tests"]
+
+# Projects resolve marketplace_macros through themselves first, so any project
+# can override one adapter's implementation without forking the package.
+dispatch:
+  - macro_namespace: marketplace_macros
+    search_order: ["platform", "marketplace_macros"]
+
+vars:
+  # Reporting
+  reporting_currency: USD
+  fx_currencies: [USD, JPY, GBP]          # columns published in the ECB export
+  fx_max_carry_forward_days: 4            # longer gaps yield a null rate, not a stale one
+  currency_minor_units: {JPY: 0, default: 2}
+  business_timezone: UTC                  # defines "day" for daily facts
+  # Time window of the example dataset
+  start_date: "2024-01-01"
+  end_date: "2025-12-31"
+  # Incremental processing
+  incremental_lookback_days: 3
+  # Run modes
+  unit_testing: false
+  dev_schema_prefix: "{{ env_var('USER', 'dev') }}"
+
+models:
+  platform:
+    staging:
+      +schema: staging
+      +materialized: view
+    intermediate:
+      +schema: intermediate
+    marts:
+      +materialized: table
+      core:
+        +schema: core
+        +group: core
+      fx:
+        +schema: fx
+        +group: fx
+      payments:
+        +schema: payments
+        +group: payments

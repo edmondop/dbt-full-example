@@ -1,0 +1,73 @@
+unit_tests:
+  - name: int__payments__net_by_day__nets_refunds_against_payments
+    model: int__payments__net_by_day
+    overrides:
+      macros:
+        is_incremental: false
+    given:
+      - input: ref('stg__shop__orders')
+        rows:
+          - {order_id: 1, merchant_id: 7}
+      - input: ref('stg__psp__payments')
+        rows:
+          - {payment_id: py_1, order_id: 1, currency_code: EUR, amount: 100, payment_status: succeeded, created_at: "2025-03-01 09:00:00", loaded_at: "2025-03-01 09:05:00"}
+          - {payment_id: py_2, order_id: 1, currency_code: EUR, amount: 100, payment_status: failed, created_at: "2025-03-01 08:00:00", loaded_at: "2025-03-01 08:05:00"}
+      - input: ref('stg__psp__refunds')
+        rows:
+          - {refund_id: re_1, payment_id: py_1, currency_code: EUR, amount: 40, refund_status: succeeded, refunded_at: "2025-03-01 18:00:00", loaded_at: "2025-03-01 18:30:00"}
+    expect:
+      rows:
+        - {payment_date: 2025-03-01, merchant_id: 7, currency_code: EUR, gross_amount: 100, refunded_amount: 40, net_amount: 60}
+
+  - name: int__payments__net_by_day__incremental_reprocesses_late_days_only
+    description: >
+      The table already holds loads up to 2025-03-10. A refund for 2025-03-05
+      arrives late (loaded 2025-03-09, inside the 3-day lookback), so all of
+      2025-03-05 is recomputed, including its payment loaded long ago. 2025-03-01
+      has no recent loads and is not touched.
+    model: int__payments__net_by_day
+    overrides:
+      macros:
+        is_incremental: true
+    given:
+      - input: this
+        rows:
+          - {payment_date: 2025-03-05, merchant_id: 7, currency_code: EUR, gross_amount: 100, refunded_amount: 0, net_amount: 100, max_loaded_at: "2025-03-05 10:00:00"}
+          - {payment_date: 2025-03-10, merchant_id: 7, currency_code: EUR, gross_amount: 50, refunded_amount: 0, net_amount: 50, max_loaded_at: "2025-03-10 12:00:00"}
+      - input: ref('stg__shop__orders')
+        rows:
+          - {order_id: 1, merchant_id: 7}
+          - {order_id: 2, merchant_id: 7}
+      - input: ref('stg__psp__payments')
+        rows:
+          - {payment_id: py_old, order_id: 2, currency_code: EUR, amount: 30, payment_status: succeeded, created_at: "2025-03-01 09:00:00", loaded_at: "2025-03-01 09:05:00"}
+          - {payment_id: py_1, order_id: 1, currency_code: EUR, amount: 100, payment_status: succeeded, created_at: "2025-03-05 09:00:00", loaded_at: "2025-03-05 10:00:00"}
+      - input: ref('stg__psp__refunds')
+        rows:
+          - {refund_id: re_1, payment_id: py_1, currency_code: EUR, amount: 25, refund_status: succeeded, refunded_at: "2025-03-05 20:00:00", loaded_at: "2025-03-09 06:00:00"}
+    expect:
+      rows:
+        - {payment_date: 2025-03-05, merchant_id: 7, currency_code: EUR, gross_amount: 100, refunded_amount: 25, net_amount: 75}
+
+  - name: int__payments__net_by_day__incremental_on_empty_table_processes_everything
+    description: >
+      Regression: an incremental run against an existing empty table must not
+      filter on `loaded_at > null`, which selects nothing.
+    model: int__payments__net_by_day
+    overrides:
+      macros:
+        is_incremental: true
+    given:
+      - input: this
+        rows: []
+      - input: ref('stg__shop__orders')
+        rows:
+          - {order_id: 1, merchant_id: 7}
+      - input: ref('stg__psp__payments')
+        rows:
+          - {payment_id: py_1, order_id: 1, currency_code: EUR, amount: 10, payment_status: succeeded, created_at: "2024-01-01 09:00:00", loaded_at: "2024-01-01 09:05:00"}
+      - input: ref('stg__psp__refunds')
+        rows: []
+    expect:
+      rows:
+        - {payment_date: 2024-01-01, merchant_id: 7, currency_code: EUR, net_amount: 10}

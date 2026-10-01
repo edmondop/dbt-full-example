@@ -1,0 +1,29 @@
+name: finance
+version: "0.1.0"
+config-version: 2
+profile: marketplace
+require-dbt-version: [">=1.12.0", "<1.13.0"]
+
+model-paths: ["models"]
+macro-paths: ["macros"]
+
+dispatch:
+  - macro_namespace: marketplace_macros
+    search_order: ["finance", "marketplace_macros"]
+
+vars:
+  reporting_currency: USD
+  unit_testing: false
+  dev_schema_prefix: "{{ env_var('USER', 'dev') }}"
+
+models:
+  finance:
+    +group: finance
+    staging:
+      +schema: finance_staging
+      +materialized: view
+    intermediate:
+      +schema: finance_intermediate
+    marts:
+      +schema: finance
+      +materialized: table

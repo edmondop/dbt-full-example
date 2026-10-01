@@ -1,0 +1,15 @@
+# Inputs are the local stg__platform__* wrappers (see _stg__platform.yml).
+unit_tests:
+  - name: int__revenue__orders_settled__only_completed_orders_in_usd
+    model: int__revenue__orders_settled
+    given:
+      - input: ref('stg__platform__orders')
+        rows:
+          - {order_id: 1, merchant_id: 5, order_date: 2025-04-01, order_status: completed, currency_code: GBP, order_amount: 100}
+          - {order_id: 2, merchant_id: 5, order_date: 2025-04-01, order_status: cancelled, currency_code: GBP, order_amount: 999}
+      - input: ref('stg__platform__fx_rates_by_day')
+        rows:
+          - {rate_date: 2025-04-01, currency_code: GBP, rate_to_usd: 1.25}
+    expect:
+      rows:
+        - {order_id: 1, order_amount_usd: 125}

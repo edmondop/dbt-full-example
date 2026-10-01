@@ -1,0 +1,13 @@
+unit_tests:
+  - name: fct__refunds_by_merchant_by_month__usd_total__buckets_by_calendar_month
+    model: fct__refunds_by_merchant_by_month__usd_total
+    given:
+      - input: ref('stg__platform__payments_by_day__usd_total')
+        rows:
+          - {payment_date: 2025-01-31, merchant_id: 3, refunded_amount_usd: 10, gross_amount_usd: 100}
+          - {payment_date: 2025-02-01, merchant_id: 3, refunded_amount_usd: 5, gross_amount_usd: 50}
+          - {payment_date: 2025-02-28, merchant_id: 3, refunded_amount_usd: 1, gross_amount_usd: 20}
+    expect:
+      rows:
+        - {refund_month: 2025-01-01, merchant_id: 3, refunded_amount_usd: 10, gross_amount_usd: 100}
+        - {refund_month: 2025-02-01, merchant_id: 3, refunded_amount_usd: 6, gross_amount_usd: 70}

@@ -1,0 +1,7 @@
+models:
+  - name: int__revenue__orders_settled
+    description: Completed orders with their USD value at the order day's FX rate.
+    access: private
+    columns:
+      - name: order_id
+        data_tests: [unique, not_null]

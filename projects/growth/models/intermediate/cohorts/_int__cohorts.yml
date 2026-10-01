@@ -1,0 +1,7 @@
+models:
+  - name: int__cohorts__first_order_by_customer
+    description: A customer's acquisition cohort is the month of their first completed order.
+    access: private
+    columns:
+      - name: customer_id
+        data_tests: [unique, not_null]

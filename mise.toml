@@ -1,0 +1,114 @@
+[env]
+REPO_ROOT = "{{config_root}}"
+DBT_PROFILES_DIR = "{{config_root}}"
+_.file = "infra/.env"
+
+[tasks."infra:up"]
+description = "Start Garage, Lakekeeper and Trino (waits until healthy)"
+dir = "infra"
+run = "docker compose up -d --wait"
+
+[tasks."infra:down"]
+description = "Stop the stack and delete its volumes"
+dir = "infra"
+run = "docker compose down -v"
+
+[tasks.generate]
+description = "Generate deterministic landing Parquet under data/landing"
+run = "uv run python generator/generate.py"
+
+[tasks."load:duckdb"]
+description = "Load landing data into data/raw.duckdb"
+depends = ["generate"]
+run = "uv run python loader/load.py duckdb"
+
+[tasks."load:trino"]
+description = "Upload landing data to Garage and register raw.* tables in Trino"
+depends = ["generate"]
+run = "uv run python loader/load.py trino"
+
+[tasks.deps]
+description = "Install dbt packages for every project"
+# dbt-loom loads upstream manifests even for `dbt deps`; on a fresh checkout
+# platform has none yet. Pointing DBT_LOOM_CONFIG at a missing file disables
+# dbt-loom for this command only.
+env = { DBT_LOOM_CONFIG = "no-loom-during-deps.yml" }
+run = "for p in projects/*/; do (cd $p && uv run dbt deps --quiet); done"
+
+[tasks.unit]
+description = "Run unit tests for a project (PROJECT=platform, DBT_TARGET=duckdb|trino)"
+depends = ["deps"]
+dir = "projects/{{env.PROJECT | default(value='platform')}}"
+# unit_testing=true turns ephemeral models into views. dbt-trino creates the
+# unit test relation in the model's schema, which an ephemeral model never
+# creates; consumers of ephemeral models also need it for dict fixtures.
+# Unit tests read input column types from the warehouse; `run --empty` builds
+# the upstream relations with zero rows. They go to separate <prefix>_unit_*
+# schemas: an empty incremental table in the real schema would make the next
+# build run incrementally against nothing.
+env = { UNIT_VARS = "{unit_testing: true, dev_schema_prefix: {{env.USER | default(value='dev')}}_unit}" }
+run = [
+  "uv run dbt run --empty --vars \"$UNIT_VARS\"",
+  "uv run dbt test --select test_type:unit --vars \"$UNIT_VARS\"",
+]
+
+[tasks.build]
+description = "dbt build a project without unit tests (PROJECT=platform, DBT_TARGET=duckdb|trino)"
+depends = ["deps"]
+dir = "projects/{{env.PROJECT | default(value='platform')}}"
+# Unit tests run in the `unit` task / CI, not in deployment builds.
+run = "uv run dbt build --exclude-resource-type unit_test"
+
+[tasks."check:naming"]
+description = "Enforce model naming and folder/YAML layout conventions"
+run = "uv run python scripts/check_naming.py"
+
+[tasks."test:py"]
+description = "Unit tests for repository scripts"
+run = "uv run pytest -q"
+
+[tasks.lint]
+description = "SQLFluff (dbt templater, DuckDB target) over every project; needs data/raw.duckdb"
+depends = ["deps"]
+run = "for p in platform finance growth; do (cd projects/$p && uv run sqlfluff lint models); done"
+
+[tasks."ci:duckdb"]
+description = "CI on DuckDB: conventions, script tests, lint, unit tests and build of every project"
+run = """
+set -eu
+mise run load:duckdb
+mise run check:naming
+mise run test:py
+for project in platform finance growth; do
+  DBT_TARGET=duckdb PROJECT=$project mise run unit
+  DBT_TARGET=duckdb PROJECT=$project mise run build
+done
+mise run lint
+"""
+
+[tasks."ci:trino"]
+description = "CI on Trino: stack up, load, unit tests and build of every project"
+run = """
+set -eu
+mise run infra:up
+mise run load:trino
+for project in platform finance growth; do
+  DBT_TARGET=trino PROJECT=$project mise run unit
+  DBT_TARGET=trino PROJECT=$project mise run build
+done
+"""
+
+[tasks."ci:slim"]
+description = "Slim CI on DuckDB against BASE_REF (default origin/main); see scripts/slim_ci.sh"
+depends = ["load:duckdb"]
+run = "scripts/slim_ci.sh {{env.BASE_REF | default(value='origin/main')}}"
+
+[tasks.demo]
+description = "Everything: DuckDB CI (checks, lint, unit, build) then the Trino stack end to end"
+# Projects run producer first: consumers resolve ref('platform', ...) from the
+# manifest platform's build just wrote for the same target (dbt_loom.config.yml).
+run = """
+set -eu
+mise run ci:duckdb
+mise run ci:trino
+"""

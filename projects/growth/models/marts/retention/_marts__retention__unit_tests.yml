@@ -1,0 +1,21 @@
+unit_tests:
+  - name: fct__cohort_retention_by_month__month_offset_is_calendar_based
+    description: >
+      A first order on 31 Jan and a repeat on 1 Feb are one day apart but one
+      calendar month apart, so the repeat counts toward month 1, not month 0.
+    model: fct__cohort_retention_by_month
+    given:
+      - input: ref('int__cohorts__first_order_by_customer')
+        rows:
+          - {customer_id: 1, cohort_month: 2025-01-01}
+          - {customer_id: 2, cohort_month: 2025-01-01}
+      - input: ref('stg__platform__orders')
+        rows:
+          - {customer_id: 1, order_date: 2025-01-31, order_status: completed}
+          - {customer_id: 1, order_date: 2025-02-01, order_status: completed}
+          - {customer_id: 2, order_date: 2025-01-15, order_status: completed}
+          - {customer_id: 2, order_date: 2025-02-10, order_status: cancelled}
+    expect:
+      rows:
+        - {cohort_month: 2025-01-01, months_since_first_order: 0, cohort_size: 2, active_customers: 2, retention_rate: 1}
+        - {cohort_month: 2025-01-01, months_since_first_order: 1, cohort_size: 2, active_customers: 1, retention_rate: 0.5}

@@ -1,0 +1,14 @@
+models:
+  - name: fct__cohort_retention_by_month
+    description: >
+      Share of each monthly acquisition cohort with a completed order N
+      calendar months after their first one (N = 0 is always 100%).
+    access: protected
+    config:
+      contract: {enforced: true}
+    columns:
+      - {name: cohort_month, data_type: date, constraints: [{type: not_null}]}
+      - {name: months_since_first_order, data_type: integer, constraints: [{type: not_null}]}
+      - {name: cohort_size, data_type: bigint}
+      - {name: active_customers, data_type: bigint}
+      - {name: retention_rate, data_type: "decimal(9, 4)"}

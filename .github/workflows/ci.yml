@@ -1,0 +1,50 @@
+name: ci
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+env:
+  # mise only loads a repo's mise.toml (env file, templates) once it is trusted.
+  MISE_TRUSTED_CONFIG_PATHS: ${{ github.workspace }}
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  duckdb:
+    name: DuckDB - conventions, lint, unit tests, build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: jdx/mise-action@v5
+      - uses: astral-sh/setup-uv@v10.3.2
+      - run: mise run ci:duckdb
+
+  slim:
+    name: DuckDB - slim CI (state:modified+ --defer)
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0   # the base ref is checked out in a worktree
+      - uses: jdx/mise-action@v5
+      - uses: astral-sh/setup-uv@v10.3.2
+      - run: mise run ci:slim
+        env:
+          BASE_REF: origin/${{ github.base_ref }}
+
+  trino:
+    name: Trino - Iceberg on Garage via Lakekeeper
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: jdx/mise-action@v5
+      - uses: astral-sh/setup-uv@v10.3.2
+      - run: mise run ci:trino
+      - name: Stack logs on failure
+        if: failure()
+        run: docker compose --project-directory infra logs --tail 200

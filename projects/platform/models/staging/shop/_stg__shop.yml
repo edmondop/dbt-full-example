@@ -1,0 +1,58 @@
+sources:
+  - name: shop
+    description: Marketplace application database, replicated daily.
+    database: raw
+    schema: shop
+    tables:
+      - name: customers
+      - name: merchants
+      - name: orders
+        loaded_at_field: updated_at
+        freshness:
+          warn_after: {count: 1, period: day}
+      - name: order_items
+
+models:
+  - name: stg__shop__customers
+    description: One row per customer.
+    columns:
+      - name: customer_id
+        data_tests: [unique, not_null]
+      - name: country_code
+        data_tests: [not_null]
+
+  - name: stg__shop__merchants
+    description: One row per merchant, with its settlement currency and local timezone.
+    columns:
+      - name: merchant_id
+        data_tests: [unique, not_null]
+      - name: currency_code
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: [EUR, GBP, USD, JPY]
+
+  - name: stg__shop__orders
+    description: One row per order. Amounts live on order items.
+    columns:
+      - name: order_id
+        data_tests: [unique, not_null]
+      - name: customer_id
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('stg__shop__customers')
+                field: customer_id
+      - name: order_status
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: [completed, cancelled, pending]
+
+  - name: stg__shop__order_items
+    description: One row per order line; prices stay in minor units until the order currency is joined.
+    columns:
+      - name: order_item_id
+        data_tests: [unique, not_null]
+      - name: line_amount_minor
+        description: quantity * unit_price_minor

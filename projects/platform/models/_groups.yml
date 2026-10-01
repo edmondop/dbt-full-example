@@ -1,0 +1,9 @@
+# Groups own marts. A model's `access` is evaluated against its group:
+# private = same group only, protected = same project, public = other projects (dbt-loom).
+groups:
+  - name: core
+    owner: {name: Platform Data, email: platform-data@example.com}
+  - name: fx
+    owner: {name: Treasury Analytics, email: treasury-analytics@example.com}
+  - name: payments
+    owner: {name: Payments Data, email: payments-data@example.com}

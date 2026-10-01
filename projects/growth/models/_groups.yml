@@ -1,0 +1,3 @@
+groups:
+  - name: growth
+    owner: {name: Growth Analytics, email: growth-analytics@example.com}

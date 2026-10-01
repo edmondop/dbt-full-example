@@ -1,0 +1,9 @@
+# dbt-loom injects platform's public models into this project's DAG, so
+# ref('platform', '<model>') resolves without platform's code. Locally and in
+# CI this reads the manifest of the last platform run on the same target; a
+# deployment would point at the production manifest (s3/gcs/http/dbt Cloud).
+manifests:
+  - name: platform
+    type: file
+    config:
+      path: ../platform/target/manifest.json

@@ -1,0 +1,33 @@
+# Shared by all projects (mise sets DBT_PROFILES_DIR to the repo root).
+# Select a target with DBT_TARGET: duckdb (default), trino, prod.
+# Targets named prod* write unprefixed schemas (generate_schema_name_for_env);
+# prod_duckdb is the baseline that slim CI defers to (scripts/slim_ci.sh).
+marketplace:
+  target: "{{ env_var('DBT_TARGET', 'duckdb') }}"
+  outputs:
+    duckdb: &duckdb
+      type: duckdb
+      path: "{{ env_var('REPO_ROOT') }}/data/warehouse.duckdb"
+      attach:
+        - path: "{{ env_var('REPO_ROOT') }}/data/raw.duckdb"
+          alias: raw
+          read_only: true
+      settings:
+        TimeZone: UTC
+      threads: 4
+    prod_duckdb:
+      <<: *duckdb
+    trino: &trino
+      type: trino
+      method: none
+      user: "{{ env_var('USER', 'dbt') }}"
+      host: "{{ env_var('TRINO_HOST', 'localhost') }}"
+      port: "{{ env_var('TRINO_PORT', '8080') | int }}"
+      database: lakehouse
+      schema: default
+      threads: 4
+      timezone: UTC
+      cert: true  # explicit; the local stack is plain HTTP so it is unused
+    prod:
+      <<: *trino
+      user: dbt-prod

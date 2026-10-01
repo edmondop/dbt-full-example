@@ -1,0 +1,27 @@
+# int__fx__rates_by_day is ephemeral. These dict fixtures only compile because
+# unit tests run with --vars '{unit_testing: true}', which makes it a view.
+unit_tests:
+  - name: fct__payments_by_day__usd_total__converts_at_daily_rate
+    model: fct__payments_by_day__usd_total
+    given:
+      - input: ref('int__payments__net_by_day')
+        rows:
+          - {payment_date: 2025-03-01, merchant_id: 1, currency_code: JPY, gross_amount: 15000, refunded_amount: 5000, net_amount: 10000}
+      - input: ref('int__fx__rates_by_day')
+        rows:
+          - {rate_date: 2025-03-01, currency_code: JPY, rate_to_reporting: 0.0066}
+    expect:
+      rows:
+        - {payment_date: 2025-03-01, merchant_id: 1, gross_amount_usd: 99, refunded_amount_usd: 33, net_amount_usd: 66}
+
+  - name: fct__payments_by_day__usd_total__missing_rate_yields_null_not_zero
+    model: fct__payments_by_day__usd_total
+    given:
+      - input: ref('int__payments__net_by_day')
+        rows:
+          - {payment_date: 2025-03-01, merchant_id: 1, currency_code: GBP, gross_amount: 10, refunded_amount: 0, net_amount: 10}
+      - input: ref('int__fx__rates_by_day')
+        rows: []
+    expect:
+      rows:
+        - {payment_date: 2025-03-01, merchant_id: 1, net_amount: 10, net_amount_usd: null}

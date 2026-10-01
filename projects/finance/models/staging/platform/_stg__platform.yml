@@ -1,0 +1,14 @@
+# Imports from the platform project (resolved by dbt-loom). Everything else in
+# this project refs these wrappers, never ref('platform', ...) directly:
+# - one place to pin or migrate an upstream model version;
+# - unit tests mock local nodes. dbt-core 1.12 builds unit-test fixture nodes
+#   without the producer's `access`, so a fixture for ref('platform', ...) is
+#   treated as protected to platform and rejected under dbt-loom.
+models:
+  - name: stg__platform__orders
+    access: private
+  - name: stg__platform__fx_rates_by_day
+    description: Pinned to deprecated v1 of fct__fx_rates_by_day (column rate_to_usd).
+    access: private
+  - name: stg__platform__payments_by_day__usd_total
+    access: private

@@ -1,0 +1,29 @@
+[project]
+name = "dbt-full-example"
+version = "0.1.0"
+description = "dbt at scale: multi-project mesh (dbt-loom) on Trino/Iceberg and DuckDB"
+requires-python = ">=3.12,<3.14"
+dependencies = [
+    "dbt-core>=1.12,<1.13",
+    "dbt-trino>=1.10,<1.11",
+    "dbt-duckdb>=1.11,<1.12",
+    "dbt-loom>=0.9,<0.10",
+    "duckdb>=1.3",
+    "trino>=0.333",
+    "pyarrow>=20",
+]
+
+[dependency-groups]
+dev = [
+    "sqlfluff>=4.3,<5",
+    "sqlfluff-templater-dbt>=4.3,<5",
+    "pytest>=8",
+]
+
+[tool.uv]
+python-preference = "only-managed"
+package = false
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]

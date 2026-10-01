@@ -1,0 +1,28 @@
+models:
+  - name: fct__payments_by_day__usd_total
+    description: >
+      Settled payments per (payment_date, merchant, currency) in the original
+      currency and in USD at that day's rate.
+    access: public
+    config:
+      contract: {enforced: true}
+    data_tests:
+      - unique:
+          arguments:
+            column_name: "cast(payment_date as varchar) || '-' || cast(merchant_id as varchar) || '-' || currency_code"
+    columns:
+      - {name: payment_date, data_type: date, constraints: [{type: not_null}]}
+      - {name: merchant_id, data_type: bigint, constraints: [{type: not_null}]}
+      - {name: currency_code, data_type: varchar, constraints: [{type: not_null}]}
+      - {name: gross_amount, data_type: "decimal(18, 4)"}
+      - {name: refunded_amount, data_type: "decimal(18, 4)"}
+      - {name: net_amount, data_type: "decimal(18, 4)"}
+      - {name: fx_rate_to_usd, data_type: "decimal(18, 8)"}
+      - {name: gross_amount_usd, data_type: "decimal(18, 4)"}
+      - {name: refunded_amount_usd, data_type: "decimal(18, 4)"}
+      - name: net_amount_usd
+        data_type: "decimal(18, 4)"
+        data_tests:
+          - not_null:
+              config:
+                severity: warn   # a null means no usable FX rate for that day

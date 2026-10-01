@@ -1,0 +1,11 @@
+models:
+  - name: fct__refunds_by_merchant_by_month__usd_total
+    description: Refunded and gross settled USD per (month, merchant).
+    access: protected
+    config:
+      contract: {enforced: true}
+    columns:
+      - {name: refund_month, data_type: date, constraints: [{type: not_null}]}
+      - {name: merchant_id, data_type: bigint, constraints: [{type: not_null}]}
+      - {name: refunded_amount_usd, data_type: "decimal(18, 4)"}
+      - {name: gross_amount_usd, data_type: "decimal(18, 4)"}
