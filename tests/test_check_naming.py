@@ -15,8 +15,10 @@ def write(root: Path, relative: str, content: str = "") -> None:
 def models(tmp_path: Path) -> Path:
     root = tmp_path / "models"
     write(root, "_groups.yml", "groups: []\n")
-    write(root, "staging/shop/stg__shop__orders.sql")
-    write(root, "staging/shop/_stg__shop.yml", "models:\n  - name: stg__shop__orders\n")
+    stage_names = [f"stg__shop__{name}" for name in ["orders", "customers", "merchants", "products", "categories"]]
+    for name in stage_names:
+        write(root, f"staging/shop/{name}.sql")
+    write(root, "staging/shop/_stg__shop.yml", "models:\n" + "".join(f"  - name: {name}\n" for name in stage_names))
     write(
         root,
         "staging/shop/_stg__shop__unit_tests.yml",
@@ -24,10 +26,13 @@ def models(tmp_path: Path) -> Path:
     )
     write(root, "marts/fx/fct__fx_rates_by_day_v1.sql")
     write(root, "marts/fx/fct__fx_rates_by_day_v2.sql")
+    for name in ["dim__currency", "fct__coverage", "fct__latest_rates"]:
+        write(root, f"marts/fx/{name}.sql")
     write(
         root,
         "marts/fx/_marts__fx.yml",
-        "models:\n  - name: fct__fx_rates_by_day\n    versions: [{v: 1}, {v: 2}]\n",
+        "models:\n  - name: fct__fx_rates_by_day\n    versions: [{v: 1}, {v: 2}]\n"
+        "  - name: dim__currency\n  - name: fct__coverage\n  - name: fct__latest_rates\n",
     )
     return root
 
@@ -56,7 +61,7 @@ def test_bad_model_names_are_reported(models: Path, relative: str, expected: str
 
 
 def test_undeclared_model_is_reported(models: Path) -> None:
-    write(models, "staging/shop/stg__shop__customers.sql")
+    write(models, "staging/shop/stg__shop__invoices.sql")
     assert "not declared in _stg__shop.yml" in messages(models)
 
 
@@ -89,3 +94,19 @@ def test_unexpected_yaml_and_flat_layout_are_reported(models: Path) -> None:
     found = messages(models)
     assert any("unexpected file" in m for m in found)
     assert any("files belong in staging/<group>/" in m for m in found)
+
+
+def test_nested_model_folder_is_reported(models: Path) -> None:
+    write(models, "intermediate/orders/variants/int__orders__special.sql")
+    assert any("models and YAML belong directly" in message for message in messages(models))
+
+
+@pytest.mark.parametrize("model_count", [0, 4, 16])
+def test_model_folder_size_is_reported(models: Path, model_count: int) -> None:
+    folder = models / "staging" / "shop"
+    names = ["orders", "customers", "merchants", "products", "categories"]
+    for name in names[model_count:]:
+        (folder / f"stg__shop__{name}.sql").unlink()
+    for index in range(5, model_count):
+        write(models, f"staging/shop/stg__shop__extra_{index}.sql")
+    assert any("expected 5-15 SQL models" in message for message in messages(models))

@@ -1,0 +1,11 @@
+models:
+  - name: fct__contribution_by_day__usd_total
+    description: Merchant-day contribution after refunds and fees.
+  - name: fct__contribution_by_merchant__usd_total
+    description: Cumulative merchant contribution in USD.
+  - name: fct__negative_margin_days
+    description: Merchant-days with negative contribution.
+  - name: fct__fee_burden_by_merchant__usd_total
+    description: Provider fees in USD by merchant.
+  - name: fct__refund_burden_by_merchant__usd_total
+    description: Refunds in USD by merchant.

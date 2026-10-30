@@ -12,3 +12,14 @@ models:
     access: private
   - name: stg__platform__payments_by_day__usd_total
     access: private
+
+  - name: stg__platform__merchants
+    description: One public merchant dimension row per merchant.
+  - name: stg__platform__customers
+    description: One public customer dimension row per customer.
+  - name: stg__platform__refunds
+    description: One public refund fact row per refund.
+  - name: stg__platform__payment_attempts
+    description: One public payment fact row per provider attempt.
+  - name: stg__platform__payouts
+    description: One row per provider payout.

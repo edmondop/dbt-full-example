@@ -20,14 +20,14 @@ with published as (
         rate_date,
         currency_code,
         units_per_eur
-    from {{ ref('stg__ecb__fx_rates') }}
+    from {{ ref('stg__reference__fx_rates') }}
     union all
     -- EUR is the ECB base currency and never appears as a column.
     select distinct
         rate_date,
         'EUR' as currency_code,
         cast(1 as decimal(18, 6)) as units_per_eur
-    from {{ ref('stg__ecb__fx_rates') }}
+    from {{ ref('stg__reference__fx_rates') }}
 ),
 
 cross_rates as (

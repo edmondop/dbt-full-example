@@ -7,12 +7,19 @@ sources:
       by days.
     database: raw
     schema: psp
-    loaded_at_field: _loaded_at
-    freshness:
-      warn_after: {count: 1, period: day}
     tables:
       - name: payments
+        loaded_at_field: _loaded_at
+        freshness:
+          warn_after: {count: 1, period: day}
       - name: refunds
+        loaded_at_field: _loaded_at
+        freshness:
+          warn_after: {count: 1, period: day}
+      - name: fees
+      - name: disputes
+      - name: balance_transactions
+      - name: payouts
 
 models:
   - name: stg__psp__payments
@@ -39,3 +46,12 @@ models:
               arguments:
                 to: ref('stg__psp__payments')
                 field: payment_id
+
+  - name: stg__psp__fees
+    description: One provider fee per captured payment, in minor units.
+  - name: stg__psp__disputes
+    description: One row per payment dispute.
+  - name: stg__psp__balance_transactions
+    description: One provider balance transaction per captured payment.
+  - name: stg__psp__payouts
+    description: One provider payout linked to a payment.

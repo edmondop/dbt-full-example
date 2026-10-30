@@ -1,0 +1,17 @@
+unit_tests:
+  - name: int__margin__merchant_day_margin__retains_refund_only_days
+    model: int__margin__merchant_day_margin
+    given:
+      - input: ref('int__margin__order_value_usd')
+        rows:
+          - {order_id: 1, merchant_id: 7, order_date: 2025-01-01, order_amount_usd: 100}
+      - input: ref('int__margin__refund_value_usd')
+        rows:
+          - {refund_id: re_1, merchant_id: 7, refund_date: 2025-01-03, refunded_usd: 25}
+      - input: ref('int__margin__fees_value_usd')
+        rows:
+          - {payment_id: py_1, merchant_id: 7, payout_date: 2025-01-03, fee_usd: 3}
+    expect:
+      rows:
+        - {report_date: 2025-01-01, merchant_id: 7, revenue_usd: 100, refunded_usd: 0, fee_usd: 0, contribution_usd: 100}
+        - {report_date: 2025-01-03, merchant_id: 7, revenue_usd: 0, refunded_usd: 25, fee_usd: 3, contribution_usd: -28}

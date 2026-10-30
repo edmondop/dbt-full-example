@@ -7,3 +7,5 @@ groups:
     owner: {name: Treasury Analytics, email: treasury-analytics@example.com}
   - name: payments
     owner: {name: Payments Data, email: payments-data@example.com}
+  - name: operations
+    owner: {name: Marketplace Operations, email: operations@example.com}

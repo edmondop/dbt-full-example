@@ -7,3 +7,18 @@
 models:
   - name: stg__platform__orders
     access: private
+
+  - name: stg__platform__customers
+    description: One public customer dimension row per customer.
+  - name: stg__platform__merchants
+    description: One public merchant dimension row per merchant.
+  - name: stg__platform__calendar
+    description: One public calendar dimension row per date.
+  - name: stg__platform__order_lines
+    description: One public order-line fact row per item.
+  - name: stg__platform__products
+    description: One public product dimension row per SKU.
+  - name: stg__platform__shipments
+    description: One public shipment fact row per shipment.
+  - name: stg__platform__payment_attempts
+    description: One public payment fact row per provider attempt.

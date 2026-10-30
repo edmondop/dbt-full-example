@@ -48,3 +48,6 @@ models:
       payments:
         +schema: payments
         +group: payments
+      operations:
+        +schema: operations
+        +group: operations

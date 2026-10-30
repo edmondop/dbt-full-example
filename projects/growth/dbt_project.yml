@@ -12,6 +12,9 @@ dispatch:
     search_order: ["growth", "marketplace_macros"]
 
 vars:
+  end_date: "2025-12-31"
+  attribution_lookback_days: 30
+  dormancy_days: 90
   unit_testing: false
   dev_schema_prefix: "{{ env_var('USER', 'dev') }}"
 

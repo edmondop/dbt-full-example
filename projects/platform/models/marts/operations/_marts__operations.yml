@@ -1,0 +1,33 @@
+models:
+  - name: fct__shipments
+    description: Shipment grain with measured delivery time.
+    access: public
+    config:
+      contract:
+        enforced: true
+    columns:
+      - name: shipment_id
+        data_type: bigint
+        data_tests:
+          - unique
+          - not_null
+      - name: order_id
+        data_type: bigint
+      - name: customer_id
+        data_type: bigint
+      - name: merchant_id
+        data_type: bigint
+      - name: shipped_at
+        data_type: timestamp
+      - name: delivered_at
+        data_type: timestamp
+      - name: delivery_days
+        data_type: integer
+  - name: fct__delivery_attempts
+    description: One row per carrier delivery attempt.
+  - name: fct__delayed_shipments
+    description: Shipments delivered after the three-day operational target.
+  - name: dim__warehouses
+    description: Warehouse locations.
+  - name: fct__inventory_snapshot
+    description: Current on-hand stock per product and warehouse.

@@ -1,0 +1,11 @@
+models:
+  - name: int__settlements__payouts_with_attempts
+    description: Payout grain with captured attempt and currency.
+  - name: int__settlements__payouts_by_day
+    description: Provider payout total by merchant and day.
+  - name: int__settlements__fees_by_payment
+    description: Provider fee per matched payment in original currency.
+  - name: int__settlements__settlement_lag
+    description: Elapsed days from payment to payout.
+  - name: int__settlements__unmatched_payouts
+    description: Payouts without a matching captured attempt.

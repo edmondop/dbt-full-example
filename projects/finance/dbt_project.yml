@@ -13,6 +13,7 @@ dispatch:
 
 vars:
   reporting_currency: USD
+  currency_minor_units: {JPY: 0, default: 2}
   unit_testing: false
   dev_schema_prefix: "{{ env_var('USER', 'dev') }}"
 

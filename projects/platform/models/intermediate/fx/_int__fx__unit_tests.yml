@@ -10,7 +10,7 @@ unit_tests:
     overrides:
       vars: {start_date: "2025-01-03", end_date: "2025-01-06"}
     given:
-      - input: ref('stg__ecb__fx_rates')
+      - input: ref('stg__reference__fx_rates')
         rows:
           # Friday and Monday published; Saturday and Sunday not.
           - {rate_date: 2025-01-03, currency_code: USD, units_per_eur: 1.0}
@@ -38,7 +38,7 @@ unit_tests:
     overrides:
       vars: {start_date: "2025-01-01", end_date: "2025-01-03", fx_max_carry_forward_days: 1}
     given:
-      - input: ref('stg__ecb__fx_rates')
+      - input: ref('stg__reference__fx_rates')
         rows:
           - {rate_date: 2025-01-01, currency_code: USD, units_per_eur: 1.0}
     expect:

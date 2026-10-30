@@ -1,0 +1,11 @@
+models:
+  - name: int__acquisition__touchpoints
+    description: Customer first-touch campaign and channel.
+  - name: int__acquisition__impressions_by_campaign
+    description: Campaign reach from impressions.
+  - name: int__acquisition__clicks_by_campaign
+    description: Campaign clicks linked to impressions.
+  - name: int__acquisition__attributed_orders
+    description: Completed orders within the configured first-touch attribution window.
+  - name: int__acquisition__channel_performance
+    description: Attributed customers and orders per acquisition channel.

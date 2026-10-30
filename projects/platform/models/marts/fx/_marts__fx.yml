@@ -27,3 +27,10 @@ models:
           - include: all
             exclude: [rate_to_reporting, reporting_currency_code, is_carried_forward]
           - {name: rate_to_usd, data_type: "decimal(18, 8)"}
+
+  - name: dim__currencies
+    description: Supported currency and minor-unit exponent.
+  - name: fct__fx_coverage
+    description: Number of supported currencies with a usable rate each day.
+  - name: fct__latest_fx_rates
+    description: Latest usable rate to reporting currency per source currency.

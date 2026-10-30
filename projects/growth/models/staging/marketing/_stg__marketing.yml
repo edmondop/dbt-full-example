@@ -1,0 +1,22 @@
+sources:
+  - name: marketing
+    database: raw
+    schema: marketing
+    tables:
+      - name: campaigns
+      - name: ad_impressions
+      - name: ad_clicks
+      - name: email_sends
+      - name: customer_attribution
+    description: Growth-owned acquisition and lifecycle events.
+models:
+  - name: stg__marketing__campaigns
+    description: One acquisition campaign with its channel.
+  - name: stg__marketing__ad_impressions
+    description: One customer impression per campaign.
+  - name: stg__marketing__ad_clicks
+    description: One customer click linked to an impression.
+  - name: stg__marketing__email_sends
+    description: One lifecycle email delivery per customer.
+  - name: stg__marketing__customer_attribution
+    description: One first-touch campaign attribution per customer.

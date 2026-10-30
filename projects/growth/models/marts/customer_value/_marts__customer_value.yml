@@ -1,0 +1,11 @@
+models:
+  - name: fct__customer_spend
+    description: Customer gross spend in original currency.
+  - name: fct__cohort_value
+    description: Lifetime gross spend by acquisition cohort and currency.
+  - name: fct__high_value_customers
+    description: Customers with at least 1000 major units spent in one currency.
+  - name: fct__order_frequency_by_country
+    description: Average completed order count by customer country.
+  - name: fct__delivery_by_customer
+    description: Shipment and delay experience by customer.

@@ -11,3 +11,12 @@ models:
     columns:
       - name: max_loaded_at
         description: Newest PSP load among the day's events; drives the incremental lookback.
+
+  - name: int__payments__succeeded_attempts
+    description: One row per successful payment attempt.
+  - name: int__payments__failed_attempts
+    description: One row per failed payment attempt.
+  - name: int__payments__refunds_with_orders
+    description: One row per successful refund with its order and merchant.
+  - name: int__payments__fees_by_payment
+    description: One row per captured payment with provider fee in major units.

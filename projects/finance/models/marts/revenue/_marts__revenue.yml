@@ -9,3 +9,12 @@ models:
       - {name: merchant_id, data_type: bigint, constraints: [{type: not_null}]}
       - {name: completed_orders, data_type: bigint}
       - {name: revenue_usd, data_type: "decimal(18, 4)"}
+
+  - name: fct__revenue_by_month__usd_total
+    description: Monthly merchant revenue in USD.
+  - name: fct__revenue_by_merchant__usd_total
+    description: Lifetime completed-order revenue by merchant.
+  - name: fct__revenue_by_country__usd_total
+    description: Completed-order revenue by merchant country.
+  - name: fct__revenue_by_currency__usd_total
+    description: Completed-order USD revenue by original currency.

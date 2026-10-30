@@ -1,0 +1,11 @@
+models:
+  - name: fct__segment_counts
+    description: Customer count by purchase-frequency segment.
+  - name: fct__first_to_second_purchase
+    description: Elapsed days between first and second distinct purchase days.
+  - name: fct__order_count_distribution
+    description: Customer count by completed-order frequency.
+  - name: fct__customer_segments
+    description: Current purchase-frequency segment per customer.
+  - name: fct__delivery_experience_by_segment
+    description: Mean delivery time by customer segment.

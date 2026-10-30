@@ -1,0 +1,22 @@
+sources:
+  - name: billing
+    database: raw
+    schema: billing
+    tables:
+      - name: invoices
+      - name: invoice_lines
+      - name: credit_notes
+      - name: tax_rates
+      - name: adjustments
+    description: Finance-owned invoices, credit notes, tax rates and adjustments.
+models:
+  - name: stg__billing__invoices
+    description: One invoice per completed order.
+  - name: stg__billing__invoice_lines
+    description: One billed order line per invoice.
+  - name: stg__billing__credit_notes
+    description: One credit note per refunded payment.
+  - name: stg__billing__tax_rates
+    description: One estimated tax rate per country.
+  - name: stg__billing__adjustments
+    description: One manual invoice adjustment.

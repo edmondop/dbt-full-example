@@ -1,0 +1,11 @@
+models:
+  - name: int__refunds__refunds_with_orders
+    description: Refund grain with customer and original currency.
+  - name: int__refunds__refunds_by_day
+    description: Daily refunds by merchant and currency.
+  - name: int__refunds__refunds_by_order
+    description: Cumulative refunded amount per order.
+  - name: int__refunds__refund_rate_by_merchant
+    description: Completed and refunded orders per merchant.
+  - name: int__refunds__credit_notes_by_invoice
+    description: Credit-note amount per invoice in minor units.

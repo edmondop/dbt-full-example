@@ -1,11 +1,11 @@
 unit_tests:
-  - name: stg__ecb__fx_rates__unpivots_and_drops_missing
+  - name: stg__reference__fx_rates__unpivots_and_drops_missing
     description: >
       A wide ECB row becomes one row per currency; `N/A` cells (no rate
       published) are dropped instead of becoming null rates.
-    model: stg__ecb__fx_rates
+    model: stg__reference__fx_rates
     given:
-      - input: source('ecb', 'eurofxref')
+      - input: source('reference', 'fx_rates')
         rows:
           - {date: "2025-01-02", usd: "1.0350", jpy: "163.20", gbp: "N/A"}
     expect:

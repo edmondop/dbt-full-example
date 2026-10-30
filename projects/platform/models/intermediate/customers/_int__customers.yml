@@ -1,0 +1,11 @@
+models:
+  - name: int__customers__first_order
+    description: First completed order date per customer.
+  - name: int__customers__order_counts
+    description: Order and completed-order counts per customer.
+  - name: int__customers__lifetime_spend
+    description: Completed gross spend per customer and original currency.
+  - name: int__customers__with_country_currency
+    description: Customer with home-market currency.
+  - name: int__customers__merchant_affinity
+    description: Completed order count per customer and merchant.

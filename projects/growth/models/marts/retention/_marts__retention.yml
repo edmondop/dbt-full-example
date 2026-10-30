@@ -12,3 +12,12 @@ models:
       - {name: cohort_size, data_type: bigint}
       - {name: active_customers, data_type: bigint}
       - {name: retention_rate, data_type: "decimal(9, 4)"}
+
+  - name: fct__monthly_active_customers
+    description: Distinct purchasing customers per month.
+  - name: fct__dormant_customers
+    description: Customers beyond the configured dormancy window.
+  - name: fct__repeat_customers_by_cohort
+    description: Cohort customers with purchases in multiple months.
+  - name: fct__cohort_revenue
+    description: Cohort gross amount by activity month and currency.

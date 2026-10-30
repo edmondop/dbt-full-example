@@ -54,3 +54,44 @@ models:
       - {name: order_status, data_type: varchar}
       - {name: currency_code, data_type: varchar}
       - {name: order_amount, data_type: "decimal(18, 4)"}
+
+  - name: dim__products
+    description: Product catalog without customer data.
+    access: public
+    config:
+      contract:
+        enforced: true
+    columns:
+      - name: sku
+        data_type: varchar
+        data_tests:
+          - unique
+          - not_null
+      - name: category_id
+        data_type: bigint
+      - name: category_name
+        data_type: varchar
+      - name: list_price_minor
+        data_type: bigint
+  - name: fct__order_lines
+    description: Order-line grain for product and basket analysis.
+    access: public
+    config:
+      contract:
+        enforced: true
+    columns:
+      - name: order_item_id
+        data_type: bigint
+        data_tests:
+          - unique
+          - not_null
+      - name: order_id
+        data_type: bigint
+      - name: sku
+        data_type: varchar
+      - name: category_id
+        data_type: bigint
+      - name: quantity
+        data_type: integer
+      - name: line_amount_minor
+        data_type: bigint

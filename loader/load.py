@@ -23,6 +23,7 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 LANDING = REPO_ROOT / "data" / "landing"
 
 ARROW_TO_TRINO = {
+    pa.date32(): "date",
     pa.int32(): "integer",
     pa.int64(): "bigint",
     pa.string(): "varchar",

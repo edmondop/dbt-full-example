@@ -11,6 +11,11 @@ sources:
         freshness:
           warn_after: {count: 1, period: day}
       - name: order_items
+      - name: categories
+      - name: products
+      - name: inventory
+      - name: promotions
+      - name: order_discounts
 
 models:
   - name: stg__shop__customers
@@ -56,3 +61,14 @@ models:
         data_tests: [unique, not_null]
       - name: line_amount_minor
         description: quantity * unit_price_minor
+
+  - name: stg__shop__categories
+    description: One row per product category.
+  - name: stg__shop__products
+    description: One row per catalog SKU with category and list price in minor units.
+  - name: stg__shop__inventory
+    description: One row per SKU and warehouse stock position.
+  - name: stg__shop__promotions
+    description: One row per merchant promotion.
+  - name: stg__shop__order_discounts
+    description: One row per order-level applied promotion.

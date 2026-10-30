@@ -10,3 +10,12 @@ models:
         description: ECB publication date the rate comes from.
       - name: days_carried_forward
         description: 0 on publication days.
+
+  - name: int__fx__published_rates
+    description: Published reference rates with reporting-currency marker.
+  - name: int__fx__currency_day_coverage
+    description: One row per calendar day and currency, including absent rates.
+  - name: int__fx__missing_rates
+    description: Currency days for which carry-forward policy yields no rate.
+  - name: int__fx__latest_rates
+    description: Most recent usable reporting rate per currency.

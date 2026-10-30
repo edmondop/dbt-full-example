@@ -1,0 +1,11 @@
+models:
+  - name: fct__payouts_by_day
+    description: Daily payout count and provider net minor units.
+  - name: fct__fees_by_day
+    description: Provider fees by payout day and original currency.
+  - name: fct__settlement_lag_by_merchant
+    description: Payment-to-payout delay by merchant.
+  - name: fct__unmatched_payouts
+    description: Payouts lacking a captured payment attempt.
+  - name: fct__payouts_by_merchant
+    description: Cumulative payout net minor units per merchant.

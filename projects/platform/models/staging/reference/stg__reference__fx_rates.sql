@@ -6,7 +6,7 @@ with unpivoted as (
             cast(date as date) as rate_date,
             '{{ currency | upper }}' as currency_code,
             nullif(trim({{ currency | lower }}), 'N/A') as rate_text
-        from {{ source('ecb', 'eurofxref') }}
+        from {{ source('reference', 'fx_rates') }}
         {%- if not loop.last %}
             union all
         {%- endif %}

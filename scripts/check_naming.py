@@ -6,6 +6,9 @@ Layout (per project):
     models/<layer>/<group>/_<prefix>__<group>.yml              properties of every model in the folder
     models/<layer>/<group>/_<prefix>__<group>__unit_tests.yml  unit tests of models in the folder (optional)
 
+Each model-bearing folder contains 5-15 SQL models. Staging groups by source
+system; intermediate and marts group by transformation or reporting use case.
+
 Names are segments joined by `__`; each segment is lower snake_case:
 
     layer       folder prefix   model name
@@ -34,6 +37,8 @@ LAYERS = {
 SEGMENT = re.compile(r"^[a-z0-9]+(_[a-z0-9]+)*$")
 VERSION_SUFFIX = re.compile(r"_v\d+$")
 ROOT_YAML_ALLOWED = {"_groups.yml"}
+MIN_MODELS_PER_FOLDER = 5
+MAX_MODELS_PER_FOLDER = 15
 
 
 @dataclass(frozen=True)
@@ -71,8 +76,18 @@ def check_folder(folder: Path, layer: str) -> list[Violation]:
     properties_file = folder / f"_{prefix}__{group}.yml"
     unit_tests_file = folder / f"_{prefix}__{group}__unit_tests.yml"
     violations: list[Violation] = []
+    for child in sorted(folder.iterdir()):
+        if child.is_dir():
+            violations.append(Violation(child, "models and YAML belong directly in the source or use-case folder"))
 
     models = sorted(folder.glob("*.sql"))
+    if not MIN_MODELS_PER_FOLDER <= len(models) <= MAX_MODELS_PER_FOLDER:
+        violations.append(
+            Violation(
+                folder,
+                f"expected {MIN_MODELS_PER_FOLDER}-{MAX_MODELS_PER_FOLDER} SQL models, found {len(models)}",
+            )
+        )
     for model in models:
         violations += check_model_name(model, layer, group)
 
