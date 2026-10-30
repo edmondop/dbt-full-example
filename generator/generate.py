@@ -8,6 +8,7 @@ Writes one Parquet file per raw table under ``data/landing/<source>/<table>/``:
   ``_loaded_at`` lagging ``created`` so incremental models must handle late arrivals
 - ``reference``: the real ECB rates (wide, string-typed, ``N/A`` for missing),
   copied from ``generator/reference``, plus currency and calendar metadata
+- ``ecb``: the same rate extract retained for baseline builds in slim CI
 - ``fulfillment``, ``billing`` and ``marketing``: connected marketplace feeds
 
 Running it twice produces byte-identical data: every random draw comes from one seeded RNG.
@@ -192,6 +193,12 @@ def generate(out: Path, volumes: Volumes, seed: int) -> None:
 
     with ECB_REFERENCE.open() as f:
         ecb_rows = [{k.lower(): v for k, v in row.items()} for row in csv.DictReader(f)]
+    # Slim CI builds the main-branch baseline against this same raw catalog.
+    # Keep its ECB source available while the current graph imports the rates
+    # through reference.fx_rates.
+    _write(out, "ecb", "eurofxref", ecb_rows, pa.schema([
+        ("date", pa.string()), ("usd", pa.string()), ("jpy", pa.string()), ("gbp", pa.string()),
+    ]))
     _generate_extended(out, rng, customers, merchants, orders, order_items, payments, refunds, ecb_rows)
 
 

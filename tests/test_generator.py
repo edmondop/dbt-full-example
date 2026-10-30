@@ -18,7 +18,7 @@ def test_secondary_feeds_are_reproducible_and_join_to_core_orders(tmp_path: Path
     generate(second, volumes, seed=42)
 
     files = sorted(first.glob("*/*/part-0.parquet"))
-    assert len(files) == 36
+    assert len(files) == 37
     for path in files:
         assert path.read_bytes() == (second / path.relative_to(first)).read_bytes()
         assert all(field.type in ARROW_TO_TRINO for field in pq.read_schema(path))
