@@ -223,7 +223,7 @@ def _generate_extended(
     )]
     skus = sorted({item["sku"] for item in order_items})
     products = [
-        {"sku": sku, "category_id": (index % len(categories)) + 1, "list_price_minor": 500 + index * 37}
+        {"sku": sku, "category_id": (index % len(categories)) + 1}
         for index, sku in enumerate(skus)
     ]
     warehouses = [{"id": i, "country": market[0]} for i, market in enumerate(MERCHANT_MARKETS, 1)]
@@ -245,7 +245,7 @@ def _generate_extended(
     ]
     _write(out, "shop", "categories", categories, pa.schema([("id", i64), ("name", string)]))
     _write(out, "shop", "products", products, pa.schema([
-        ("sku", string), ("category_id", i64), ("list_price_minor", i64),
+        ("sku", string), ("category_id", i64),
     ]))
     _write(out, "shop", "inventory", inventory, pa.schema([
         ("sku", string), ("warehouse_id", i64), ("on_hand", i64),

@@ -13,3 +13,22 @@ unit_tests:
     expect:
       rows:
         - {order_id: 1, order_amount_usd: 125}
+
+  - name: int__revenue__invoice_balance__nets_credits_and_adjustments
+    model: int__revenue__invoice_balance
+    given:
+      - input: ref('int__revenue__invoices_with_orders')
+        rows:
+          - {invoice_id: 10, order_id: 20, merchant_id: 5, currency_code: USD}
+      - input: ref('int__revenue__invoice_lines_by_invoice')
+        rows:
+          - {invoice_id: 10, invoiced_amount_minor: 10000}
+      - input: ref('int__refunds__credit_notes_by_invoice')
+        rows:
+          - {invoice_id: 10, credited_minor: 2500}
+      - input: ref('stg__billing__adjustments')
+        rows:
+          - {adjustment_id: 1, invoice_id: 10, amount_minor: 100}
+    expect:
+      rows:
+        - {invoice_id: 10, order_id: 20, merchant_id: 5, currency_code: USD, invoiced_minor: 10000, credited_minor: 2500, adjustment_minor: 100, net_billed_minor: 7600}

@@ -5,17 +5,26 @@ sources:
     schema: shop
     tables:
       - name: customers
+        description: Customer accounts with email, country and account timestamps.
       - name: merchants
+        description: Merchant identity, settlement currency and local time zone.
       - name: orders
+        description: Order header, lifecycle status and order timestamp.
         loaded_at_field: updated_at
         freshness:
           warn_after: {count: 1, period: day}
       - name: order_items
+        description: Quantity, SKU and unit price in minor units for each order line.
       - name: categories
+        description: Product category lookup.
       - name: products
+        description: Catalog SKU and category.
       - name: inventory
+        description: Current on-hand stock by SKU and warehouse.
       - name: promotions
+        description: Merchant promotion and percentage discount.
       - name: order_discounts
+        description: Applied promotion and minor-unit discount for an order.
 
 models:
   - name: stg__shop__customers
@@ -65,7 +74,7 @@ models:
   - name: stg__shop__categories
     description: One row per product category.
   - name: stg__shop__products
-    description: One row per catalog SKU with category and list price in minor units.
+    description: One row per catalog SKU with its category.
   - name: stg__shop__inventory
     description: One row per SKU and warehouse stock position.
   - name: stg__shop__promotions

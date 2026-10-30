@@ -9,3 +9,7 @@ models:
     description: Current purchase-frequency segment per customer.
   - name: fct__delivery_experience_by_segment
     description: Mean delivery time by customer segment.
+  - name: fct__customer_payment_failures
+    description: Failed provider payment attempts per customer.
+  - name: fct__email_reengagement
+    description: Completed orders within the configured number of days after each lifecycle email.

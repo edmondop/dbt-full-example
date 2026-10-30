@@ -24,7 +24,7 @@ business-time-zone day boundaries, late arrivals and attribution windows.
 
 `generator/generate.py` produces the data deterministically (2,000 customers,
 50 merchants, 20,000 orders over 2024–2025) using the real ECB rates in
-`generator/reference/`. The default graph has 178 SQL models in 33 model
+`generator/reference/`. The default graph has 188 SQL models in 33 model
 folders; each populated folder has 5–9 models.
 
 Refund and payout events can fall in January 2026, after the supplied ECB file
@@ -71,6 +71,17 @@ before it reaches a consumer. Intermediate models keep the default
 `rate_to_reporting`; v1 carries a `deprecation_date`, and `finance` still pins
 v1 to show what a consumer sees during a migration
 (`projects/platform/models/marts/fx/_marts__fx.yml`).
+
+The three projects also install [dbt_project_evaluator](https://github.com/dbt-labs/dbt-project-evaluator)
+1.4.1, the release line compatible with this repository's dbt 1.12. Run
+`PROJECT=platform mise run governance` (or `finance` or `growth`) after loading
+DuckDB data to build its graph checks and reject staging or intermediate models
+without a downstream model. Governance checks for public contracts
+and public-model documentation fail the task; graph shape, freshness and test
+coverage findings remain visible as warnings. Consumer evaluations exclude the
+injected platform package so they report only models owned by that project.
+The evaluator identifies graph and metadata issues; model responsibility still
+requires review of each model's grain and business purpose.
 
 ### One codebase, two engines
 
@@ -124,6 +135,12 @@ consumer-facing relations by **reporting use case**, such as `revenue`,
 `profitability`, `acquisition` or `retention`. A mart area can contain several
 facts and dimensions at different documented grains.
 
+Each model owns one output relation with a stated grain and business purpose.
+For example, `int__payments__net_by_day` joins payment and refund events to
+produce one merchant-day-currency balance; its CTEs are steps in that single
+calculation. The folder count is a repository convention, not a reason to add
+models that duplicate a parent's output.
+
 ```
 projects/
   platform/models/
@@ -158,6 +175,10 @@ model, its grain and any public contract, column tests or source definitions.
 `scripts/check_naming.py` enforces the folder size, names and YAML placement in
 CI. This is a layout rule for this example, not a dbt requirement.
 
+Model SQL lists its projected columns explicitly, including the import models
+under `staging/platform/`. The naming check rejects wildcard projections so a
+new column on a parent cannot silently widen a consumer relation.
+
 Names also encode units: models ending in `__usd_total` call
 `assert_reporting_currency('USD')`, so overriding `reporting_currency` fails
 at compile time instead of writing EUR into a USD column.
@@ -184,6 +205,7 @@ writes.
 | `mise run ci:slim` | slim CI against `BASE_REF` (default `origin/main`) |
 | `PROJECT=finance DBT_TARGET=trino mise run unit` | one project's unit tests on one engine |
 | `PROJECT=growth mise run build` | `dbt build` for one project |
+| `PROJECT=finance mise run governance` | dbt project evaluator for one project |
 | `mise run infra:down` | stops the stack and deletes its volumes |
 
 `.github/workflows/ci.yml` runs the same tasks. `infra/.env` contains

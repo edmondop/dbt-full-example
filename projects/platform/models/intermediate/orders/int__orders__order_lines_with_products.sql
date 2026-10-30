@@ -5,7 +5,6 @@ select
     items.quantity,
     items.line_amount_minor,
     products.category_id,
-    products.list_price_minor,
     orders.currency_code
 from {{ ref('stg__shop__order_items') }} as items
 inner join {{ ref('stg__shop__products') }} as products on items.sku = products.sku

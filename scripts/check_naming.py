@@ -35,6 +35,7 @@ LAYERS = {
     "marts": ("marts", ("fct", "dim")),
 }
 SEGMENT = re.compile(r"^[a-z0-9]+(_[a-z0-9]+)*$")
+WILDCARD_SELECT = re.compile(r"\bselect\s+(?:[a-z_][a-z0-9_]*\.)?\*", re.IGNORECASE)
 VERSION_SUFFIX = re.compile(r"_v\d+$")
 ROOT_YAML_ALLOWED = {"_groups.yml"}
 MIN_MODELS_PER_FOLDER = 5
@@ -90,6 +91,8 @@ def check_folder(folder: Path, layer: str) -> list[Violation]:
         )
     for model in models:
         violations += check_model_name(model, layer, group)
+        if WILDCARD_SELECT.search(model.read_text()):
+            violations.append(Violation(model, "use explicit projected columns instead of SELECT *"))
 
     if any(folder.iterdir()) and not properties_file.exists():
         violations.append(Violation(folder, f"missing properties file {properties_file.name}"))

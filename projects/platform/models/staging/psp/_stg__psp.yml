@@ -9,17 +9,23 @@ sources:
     schema: psp
     tables:
       - name: payments
+        description: Payment attempts with provider status, epoch event time and export load time.
         loaded_at_field: _loaded_at
         freshness:
           warn_after: {count: 1, period: day}
       - name: refunds
+        description: Partial or full refunds linked to captured payments.
         loaded_at_field: _loaded_at
         freshness:
           warn_after: {count: 1, period: day}
       - name: fees
+        description: Provider fee in minor units for each captured payment.
       - name: disputes
+        description: Provider dispute amount and status for a payment.
       - name: balance_transactions
+        description: Provider net amount and availability time for a payment.
       - name: payouts
+        description: Provider payout linked to a merchant and payment.
 
 models:
   - name: stg__psp__payments

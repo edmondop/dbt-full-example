@@ -1,5 +1,4 @@
 select
     sku,
-    category_id,
-    list_price_minor
+    category_id
 from {{ source('shop', 'products') }}

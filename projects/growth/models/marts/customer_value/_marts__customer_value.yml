@@ -9,3 +9,5 @@ models:
     description: Average completed order count by customer country.
   - name: fct__delivery_by_customer
     description: Shipment and delay experience by customer.
+  - name: fct__category_purchase_volume
+    description: Completed-order units and original-currency minor amount by product category and currency.

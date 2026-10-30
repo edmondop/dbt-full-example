@@ -8,10 +8,15 @@ sources:
     schema: reference
     tables:
       - name: fx_rates
+        description: ECB daily reference-rate extract with string-valued currency columns.
       - name: currencies
+        description: Supported currency codes and minor-unit exponents.
       - name: countries
+        description: Marketplace country and home currency mapping.
       - name: calendar
+        description: Reporting dates covering the generated order period.
       - name: holidays
+        description: Named reference holidays in the reporting period.
 
 models:
   - name: stg__reference__fx_rates

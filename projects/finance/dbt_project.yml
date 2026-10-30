@@ -10,14 +10,24 @@ macro-paths: ["macros"]
 dispatch:
   - macro_namespace: marketplace_macros
     search_order: ["finance", "marketplace_macros"]
+  - macro_namespace: dbt
+    search_order: ["dbt_project_evaluator", "dbt"]
 
 vars:
+  exclude_packages: [platform]
   reporting_currency: USD
   currency_minor_units: {JPY: 0, default: 2}
   unit_testing: false
   dev_schema_prefix: "{{ env_var('USER', 'dev') }}"
 
 models:
+  dbt_project_evaluator:
+    +schema: finance_governance
+    marts:
+      core:
+        # Cut the evaluator's recursive DAG query before Trino's stage limit.
+        int_all_dag_relationships:
+          +materialized: table
   finance:
     +group: finance
     staging:
@@ -28,3 +38,9 @@ models:
     marts:
       +schema: finance
       +materialized: table
+
+data_tests:
+  dbt_project_evaluator:
+    marts:
+      governance:
+        +severity: error

@@ -10,15 +10,26 @@ macro-paths: ["macros"]
 dispatch:
   - macro_namespace: marketplace_macros
     search_order: ["growth", "marketplace_macros"]
+  - macro_namespace: dbt
+    search_order: ["dbt_project_evaluator", "dbt"]
 
 vars:
+  exclude_packages: [platform]
   end_date: "2025-12-31"
   attribution_lookback_days: 30
+  email_response_days: 30
   dormancy_days: 90
   unit_testing: false
   dev_schema_prefix: "{{ env_var('USER', 'dev') }}"
 
 models:
+  dbt_project_evaluator:
+    +schema: growth_governance
+    marts:
+      core:
+        # Cut the evaluator's recursive DAG query before Trino's stage limit.
+        int_all_dag_relationships:
+          +materialized: table
   growth:
     +group: growth
     staging:
@@ -29,3 +40,9 @@ models:
     marts:
       +schema: growth
       +materialized: table
+
+data_tests:
+  dbt_project_evaluator:
+    marts:
+      governance:
+        +severity: error

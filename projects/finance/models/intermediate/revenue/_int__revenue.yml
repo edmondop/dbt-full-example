@@ -12,5 +12,7 @@ models:
     description: Line count and minor-unit total per invoice.
   - name: int__revenue__taxed_orders
     description: Completed order with estimated tax in original currency.
+  - name: int__revenue__invoice_balance
+    description: Invoice-grain billed, credited and adjusted amounts in original minor units.
   - name: int__revenue__monthly_by_merchant
     description: Monthly merchant revenue in USD.

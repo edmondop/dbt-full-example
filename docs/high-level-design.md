@@ -24,11 +24,11 @@ Each leaf folder below has 5–15 SQL models. Counts are design targets, adjuste
 
 | Project | Staging by source | Intermediate by function | Marts by reporting area | Approximate total |
 | --- | --- | --- | --- | ---: |
-| `platform` | `shop` 9, `psp` 6, `fulfillment` 6, `reference` 5 | `orders`, `payments`, `fulfillment`, `fx`, `customers`: 5 each | `core` 6, `payments` 5, `fx` 5, `operations` 5 | 72 |
-| `finance` | `platform` 8, `billing` 5 | `revenue`, `settlements`, `refunds`, `margin`: 5 each | `revenue`, `settlements`, `profitability`, `refunds`: 5 each | 53 |
-| `growth` | `platform` 8, `marketing` 5 | `acquisition`, `cohorts`, `retention`, `lifecycle`: 5 each | `acquisition`, `retention`, `customer_value`, `lifecycle`: 5 each | 53 |
+| `platform` | `shop` 9, `psp` 6, `fulfillment` 6, `reference` 5 | `orders`, `payments`, `fulfillment`, `fx`, `customers`: 5 each | `core` 9, `payments` 6, `fx` 5, `operations` 5 | 76 |
+| `finance` | `platform` 8, `billing` 5 | `revenue` 6, `settlements` 5, `refunds` 5, `margin` 5 | `revenue` 7, `settlements` 5, `profitability` 5, `refunds` 5 | 56 |
+| `growth` | `platform` 8, `marketing` 5 | `acquisition`, `cohorts`, `retention`, `lifecycle`: 5 each | `acquisition` 5, `retention` 5, `customer_value` 6, `lifecycle` 7 | 56 |
 
-The graph has 178 SQL models across three projects. Folder-local properties and unit-test YAML stay beside the SQL they describe. The naming check walks all leaf folders, validates their names and YAML ownership, and reports empty or out-of-range folders. dbt groups and schemas remain explicitly configured at mart-area level.
+The graph has 188 SQL models across three projects. Folder-local properties and unit-test YAML stay beside the SQL they describe. The naming check walks all leaf folders, validates their names and YAML ownership, and reports empty or out-of-range folders. dbt groups and schemas remain explicitly configured at mart-area level.
 
 ## Interfaces and behavior
 

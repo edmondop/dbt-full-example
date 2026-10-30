@@ -48,19 +48,22 @@ for project in "${projects[@]}"; do
     else
       # The injected platform nodes themselves are selected by `platform.<model>+`
       # but are not this project's to build.
-      select="$own_changes $platform_changes"; exclude="--exclude package:platform"
+      select="$own_changes $platform_changes"; exclude="package:platform"
     fi
     echo "==> slim build: $project (vs $base_ref): $select"
-    DBT_TARGET=duckdb uv run dbt build --no-partial-parse --select $select $exclude \
+    DBT_TARGET=duckdb uv run dbt build --no-partial-parse --select $select \
+      --exclude package:dbt_project_evaluator $exclude \
       --defer --state "$state" --exclude-resource-type unit_test
     if [ "$project" = platform ]; then
       platform_changes=$(DBT_TARGET=duckdb uv run dbt ls --quiet --select state:modified --state "$state" \
+        --exclude package:dbt_project_evaluator \
         --resource-type model --output json --output-keys name version \
         | uv run python "$repo/scripts/upstream_selectors.py" platform)
       echo "    platform models changed: ${platform_changes:-none}"
     fi
   else
     echo "==> full build: $project (not present at $base_ref)"
-    DBT_TARGET=duckdb uv run dbt build --no-partial-parse --exclude-resource-type unit_test
+    DBT_TARGET=duckdb uv run dbt build --no-partial-parse \
+      --exclude package:dbt_project_evaluator --exclude-resource-type unit_test
   fi
 done

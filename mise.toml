@@ -48,7 +48,7 @@ dir = "projects/{{env.PROJECT | default(value='platform')}}"
 # build run incrementally against nothing.
 env = { UNIT_VARS = "{unit_testing: true, dev_schema_prefix: {{env.USER | default(value='dev')}}_unit}" }
 run = [
-  "uv run dbt run --empty --vars \"$UNIT_VARS\"",
+  "uv run dbt run --empty --exclude package:dbt_project_evaluator --vars \"$UNIT_VARS\"",
   "uv run dbt test --select test_type:unit --vars \"$UNIT_VARS\"",
 ]
 
@@ -57,7 +57,16 @@ description = "dbt build a project without unit tests (PROJECT=platform, DBT_TAR
 depends = ["deps"]
 dir = "projects/{{env.PROJECT | default(value='platform')}}"
 # Unit tests run in the `unit` task / CI, not in deployment builds.
-run = "uv run dbt build --exclude-resource-type unit_test"
+run = "uv run dbt build --exclude package:dbt_project_evaluator --exclude-resource-type unit_test"
+
+[tasks.governance]
+description = "Evaluate the project DAG, documentation and governance rules (PROJECT=platform|finance|growth)"
+depends = ["deps"]
+dir = "projects/{{env.PROJECT | default(value='platform')}}"
+run = [
+  "uv run dbt build --select package:dbt_project_evaluator",
+  "uv run python ../../scripts/check_model_dag.py target/manifest.json {{env.PROJECT | default(value='platform')}}",
+]
 
 [tasks."check:naming"]
 description = "Enforce model naming and folder/YAML layout conventions"
@@ -82,6 +91,7 @@ mise run test:py
 for project in platform finance growth; do
   DBT_TARGET=duckdb PROJECT=$project mise run unit
   DBT_TARGET=duckdb PROJECT=$project mise run build
+  DBT_TARGET=duckdb PROJECT=$project mise run governance
 done
 mise run lint
 """

@@ -11,18 +11,28 @@ models:
         data_tests:
           - unique
           - not_null
+        description: Fulfillment shipment identifier.
       - name: order_id
         data_type: bigint
+        description: Marketplace order identifier.
       - name: customer_id
         data_type: bigint
+        description: Marketplace customer identifier.
       - name: merchant_id
         data_type: bigint
+        description: Marketplace merchant identifier.
       - name: shipped_at
         data_type: timestamp
+        description: UTC timestamp when the shipment left the warehouse.
       - name: delivered_at
         data_type: timestamp
+        description: UTC timestamp of the delivered shipment event.
       - name: delivery_days
         data_type: integer
+        description: Elapsed calendar days from shipment to delivery.
+      - name: tracking_code
+        data_type: varchar
+        description: Carrier tracking code on the issued shipping label.
   - name: fct__delivery_attempts
     description: One row per carrier delivery attempt.
   - name: fct__delayed_shipments

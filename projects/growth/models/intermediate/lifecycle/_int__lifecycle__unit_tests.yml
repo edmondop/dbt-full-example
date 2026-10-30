@@ -1,0 +1,10 @@
+unit_tests:
+  - name: int__lifecycle__repeat_purchase_days__uses_distinct_purchase_dates
+    model: int__lifecycle__repeat_purchase_days
+    given:
+      - input: ref('int__retention__second_order')
+        rows:
+          - {customer_id: 1, first_order_date: 2025-01-02, second_order_date: 2025-01-05}
+    expect:
+      rows:
+        - {customer_id: 1, days_to_second_order: 3}

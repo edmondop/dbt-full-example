@@ -16,9 +16,8 @@ activity as (
 cohort_sizes as (
     select
         cohort_month,
-        count(*) as cohort_size
-    from cohorts
-    group by cohort_month
+        cohort_size
+    from {{ ref('int__cohorts__cohort_sizes') }}
 ),
 
 activity_by_offset as (

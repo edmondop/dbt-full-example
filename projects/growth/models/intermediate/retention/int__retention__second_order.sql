@@ -1,5 +1,6 @@
 select
     o.customer_id,
+    c.first_order_date,
     min(o.order_date) as second_order_date
 from {{ ref('stg__platform__orders') }} as o
 inner join {{ ref('int__cohorts__first_order_by_customer') }} as c
@@ -7,4 +8,4 @@ inner join {{ ref('int__cohorts__first_order_by_customer') }} as c
 where
     o.order_status = 'completed'
     and o.order_date > c.first_order_date
-group by o.customer_id
+group by o.customer_id, c.first_order_date

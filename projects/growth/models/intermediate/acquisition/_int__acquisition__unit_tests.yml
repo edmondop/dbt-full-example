@@ -9,8 +9,11 @@ unit_tests:
           - {customer_id: 1, campaign_id: 2, channel: search, attribution_date: 2025-01-01}
       - input: ref('stg__platform__orders')
         rows:
-          - {order_id: 10, customer_id: 1, order_date: 2025-01-31, order_status: completed, order_amount: 100}
-          - {order_id: 11, customer_id: 1, order_date: 2025-02-01, order_status: completed, order_amount: 200}
+          - {order_id: 10, customer_id: 1, merchant_id: 3, order_date: 2025-01-31, order_status: completed, order_amount: 100}
+          - {order_id: 11, customer_id: 1, merchant_id: 3, order_date: 2025-02-01, order_status: completed, order_amount: 200}
+      - input: ref('stg__platform__merchants')
+        rows:
+          - {merchant_id: 3, country_code: GB}
     expect:
       rows:
-        - {customer_id: 1, campaign_id: 2, channel: search, order_id: 10, order_date: 2025-01-31, order_amount: 100}
+        - {customer_id: 1, campaign_id: 2, channel: search, order_id: 10, merchant_id: 3, merchant_country_code: GB, order_date: 2025-01-31, order_amount: 100}

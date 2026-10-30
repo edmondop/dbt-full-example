@@ -9,6 +9,9 @@ unit_tests:
         rows:
           - {customer_id: 1, cohort_month: 2025-01-01}
           - {customer_id: 2, cohort_month: 2025-01-01}
+      - input: ref('int__cohorts__cohort_sizes')
+        rows:
+          - {cohort_month: 2025-01-01, cohort_size: 2}
       - input: ref('stg__platform__orders')
         rows:
           - {customer_id: 1, order_date: 2025-01-31, order_status: completed}

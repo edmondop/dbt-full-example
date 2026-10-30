@@ -1,0 +1,16 @@
+unit_tests:
+  - name: fct__email_reengagement__uses_response_window
+    model: fct__email_reengagement
+    overrides:
+      vars: {email_response_days: 30}
+    given:
+      - input: ref('stg__marketing__email_sends')
+        rows:
+          - {email_send_id: 1, customer_id: 7, sent_at: 2025-01-01}
+      - input: ref('stg__platform__orders')
+        rows:
+          - {order_id: 10, customer_id: 7, order_status: completed, order_date: 2025-01-31}
+          - {order_id: 11, customer_id: 7, order_status: completed, order_date: 2025-02-01}
+    expect:
+      rows:
+        - {email_send_id: 1, customer_id: 7, completed_orders_within_window: 1}

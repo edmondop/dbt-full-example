@@ -29,3 +29,19 @@ unit_tests:
     expect:
       rows:
         - {order_id: 2, order_amount_minor: 0, order_amount: 0}
+
+  - name: int__orders__with_discounts__uses_applied_promotion
+    model: int__orders__with_discounts
+    given:
+      - input: ref('int__orders__completed')
+        rows:
+          - {order_id: 1, customer_id: 2, merchant_id: 3, currency_code: USD, order_amount: 100}
+      - input: ref('int__orders__discounts_by_order')
+        rows:
+          - {order_id: 1, promotion_id: 3, discount_amount_minor: 250}
+      - input: ref('stg__shop__promotions')
+        rows:
+          - {promotion_id: 3, merchant_id: 3, discount_percent: 10}
+    expect:
+      rows:
+        - {order_id: 1, discount_amount_minor: 250, applied_discount_percent: 10, net_order_amount: 97.5}

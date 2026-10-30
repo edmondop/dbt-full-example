@@ -4,10 +4,15 @@ sources:
     schema: billing
     tables:
       - name: invoices
+        description: Issued invoice linked to a completed order.
       - name: invoice_lines
+        description: Billed line amount in original minor units.
       - name: credit_notes
+        description: Credit note amount linked to a refunded invoice.
       - name: tax_rates
+        description: Estimated tax percentage by merchant country.
       - name: adjustments
+        description: Manual invoice adjustment in minor units.
     description: Finance-owned invoices, credit notes, tax rates and adjustments.
 models:
   - name: stg__billing__invoices

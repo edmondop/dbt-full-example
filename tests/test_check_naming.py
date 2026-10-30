@@ -101,6 +101,11 @@ def test_nested_model_folder_is_reported(models: Path) -> None:
     assert any("models and YAML belong directly" in message for message in messages(models))
 
 
+def test_wildcard_projection_is_reported(models: Path) -> None:
+    write(models, "staging/shop/stg__shop__orders.sql", "select * from {{ source('shop', 'orders') }}\n")
+    assert any("use explicit projected columns" in message for message in messages(models))
+
+
 @pytest.mark.parametrize("model_count", [0, 4, 16])
 def test_model_folder_size_is_reported(models: Path, model_count: int) -> None:
     folder = models / "staging" / "shop"

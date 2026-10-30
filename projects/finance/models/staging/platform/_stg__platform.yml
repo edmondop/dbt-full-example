@@ -6,11 +6,13 @@
 #   treated as protected to platform and rejected under dbt-loom.
 models:
   - name: stg__platform__orders
+    description: One order-grain import of platform's public order contract.
     access: private
   - name: stg__platform__fx_rates_by_day
     description: Pinned to deprecated v1 of fct__fx_rates_by_day (column rate_to_usd).
     access: private
   - name: stg__platform__payments_by_day__usd_total
+    description: Platform payment totals by business date, merchant and currency.
     access: private
 
   - name: stg__platform__merchants
