@@ -19,7 +19,7 @@ from pathlib import Path
 import pyarrow as pa
 import pyarrow.parquet as pq
 
-REPO_ROOT = Path(__file__).resolve().parent.parent
+REPO_ROOT = Path(__file__).resolve().parents[2]
 LANDING = REPO_ROOT / "data" / "landing"
 
 ARROW_TO_TRINO = {

@@ -7,7 +7,7 @@ Writes one Parquet file per raw table under ``data/landing/<source>/<table>/``:
   lowercase currency codes, epoch-second timestamps, amounts in minor units, and
   ``_loaded_at`` lagging ``created`` so incremental models must handle late arrivals
 - ``reference``: the real ECB rates (wide, string-typed, ``N/A`` for missing),
-  copied from ``generator/reference``, plus currency and calendar metadata
+  copied from ``tooling/generator/reference``, plus currency and calendar metadata
 - ``ecb``: the same rate extract retained for baseline builds in slim CI
 - ``fulfillment``, ``billing`` and ``marketing``: connected marketplace feeds
 
@@ -26,8 +26,8 @@ from pathlib import Path
 import pyarrow as pa
 import pyarrow.parquet as pq
 
-REPO_ROOT = Path(__file__).resolve().parent.parent
-ECB_REFERENCE = REPO_ROOT / "generator" / "reference" / "ecb_eurofxref_2024_2025.csv"
+REPO_ROOT = Path(__file__).resolve().parents[2]
+ECB_REFERENCE = Path(__file__).resolve().parent / "reference" / "ecb_eurofxref_2024_2025.csv"
 
 START = date(2024, 1, 1)
 END = date(2025, 12, 31)

@@ -1,6 +1,6 @@
 [env]
 REPO_ROOT = "{{config_root}}"
-DBT_PROFILES_DIR = "{{config_root}}"
+DBT_PROFILES_DIR = "{{config_root}}/dbt"
 _.file = "infra/.env"
 
 [tasks."infra:up"]
@@ -15,17 +15,17 @@ run = "docker compose down -v"
 
 [tasks.generate]
 description = "Generate deterministic landing Parquet under data/landing"
-run = "uv run python generator/generate.py"
+run = "uv run python tooling/generator/generate.py"
 
 [tasks."load:duckdb"]
 description = "Load landing data into data/raw.duckdb"
 depends = ["generate"]
-run = "uv run python loader/load.py duckdb"
+run = "uv run python tooling/loader/load.py duckdb"
 
 [tasks."load:trino"]
 description = "Upload landing data to Garage and register raw.* tables in Trino"
 depends = ["generate"]
-run = "uv run python loader/load.py trino"
+run = "uv run python tooling/loader/load.py trino"
 
 [tasks.deps]
 description = "Install dbt packages for every project"
@@ -33,12 +33,12 @@ description = "Install dbt packages for every project"
 # platform has none yet. Pointing DBT_LOOM_CONFIG at a missing file disables
 # dbt-loom for this command only.
 env = { DBT_LOOM_CONFIG = "no-loom-during-deps.yml" }
-run = "for p in projects/*/; do (cd $p && uv run dbt deps --quiet); done"
+run = "for p in dbt/projects/*/; do (cd $p && uv run dbt deps --quiet); done"
 
 [tasks.unit]
 description = "Run unit tests for a project (PROJECT=platform, DBT_TARGET=duckdb|trino)"
 depends = ["deps"]
-dir = "projects/{{env.PROJECT | default(value='platform')}}"
+dir = "dbt/projects/{{env.PROJECT | default(value='platform')}}"
 # unit_testing=true turns ephemeral models into views. dbt-trino creates the
 # unit test relation in the model's schema, which an ephemeral model never
 # creates; consumers of ephemeral models also need it for dict fixtures.
@@ -55,22 +55,22 @@ run = [
 [tasks.build]
 description = "dbt build a project without unit tests (PROJECT=platform, DBT_TARGET=duckdb|trino)"
 depends = ["deps"]
-dir = "projects/{{env.PROJECT | default(value='platform')}}"
+dir = "dbt/projects/{{env.PROJECT | default(value='platform')}}"
 # Unit tests run in the `unit` task / CI, not in deployment builds.
 run = "uv run dbt build --exclude package:dbt_project_evaluator --exclude-resource-type unit_test"
 
 [tasks.governance]
 description = "Evaluate the project DAG, documentation and governance rules (PROJECT=platform|finance|growth)"
 depends = ["deps"]
-dir = "projects/{{env.PROJECT | default(value='platform')}}"
+dir = "dbt/projects/{{env.PROJECT | default(value='platform')}}"
 run = [
   "uv run dbt build --select package:dbt_project_evaluator",
-  "uv run python ../../scripts/check_model_dag.py target/manifest.json {{env.PROJECT | default(value='platform')}}",
+  "uv run python ../../../tooling/scripts/check_model_dag.py target/manifest.json {{env.PROJECT | default(value='platform')}}",
 ]
 
 [tasks."check:naming"]
 description = "Enforce model naming and folder/YAML layout conventions"
-run = "uv run python scripts/check_naming.py"
+run = "uv run python tooling/scripts/check_naming.py"
 
 [tasks."test:py"]
 description = "Unit tests for repository scripts"
@@ -79,7 +79,7 @@ run = "uv run pytest -q"
 [tasks.lint]
 description = "SQLFluff (dbt templater, DuckDB target) over every project; needs data/raw.duckdb"
 depends = ["deps"]
-run = "for p in platform finance growth; do (cd projects/$p && uv run sqlfluff lint models); done"
+run = "for p in platform finance growth; do (cd dbt/projects/$p && uv run sqlfluff lint models); done"
 
 [tasks."ci:duckdb"]
 description = "CI on DuckDB: conventions, script tests, lint, unit tests and build of every project"
@@ -109,9 +109,9 @@ done
 """
 
 [tasks."ci:slim"]
-description = "Slim CI on DuckDB against BASE_REF (default origin/main); see scripts/slim_ci.sh"
+description = "Slim CI on DuckDB against BASE_REF (default origin/main); see tooling/scripts/slim_ci.sh"
 depends = ["load:duckdb"]
-run = "scripts/slim_ci.sh {{env.BASE_REF | default(value='origin/main')}}"
+run = "tooling/scripts/slim_ci.sh {{env.BASE_REF | default(value='origin/main')}}"
 
 [tasks.demo]
 description = "Everything: DuckDB CI (checks, lint, unit, build) then the Trino stack end to end"

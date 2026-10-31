@@ -25,5 +25,5 @@ python-preference = "only-managed"
 package = false
 
 [tool.pytest.ini_options]
-testpaths = ["tests"]
-pythonpath = ["."]
+testpaths = ["tooling/tests"]
+pythonpath = ["tooling"]

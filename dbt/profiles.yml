@@ -1,7 +1,7 @@
-# Shared by all projects (mise sets DBT_PROFILES_DIR to the repo root).
+# Shared by all projects (mise sets DBT_PROFILES_DIR to the dbt directory).
 # Select a target with DBT_TARGET: duckdb (default), trino, prod.
 # Targets named prod* write unprefixed schemas (generate_schema_name_for_env);
-# prod_duckdb is the baseline that slim CI defers to (scripts/slim_ci.sh).
+# prod_duckdb is the baseline that slim CI defers to (tooling/scripts/slim_ci.sh).
 marketplace:
   target: "{{ env_var('DBT_TARGET', 'duckdb') }}"
   outputs:

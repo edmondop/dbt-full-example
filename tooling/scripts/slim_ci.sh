@@ -2,7 +2,7 @@
 # Slim CI on DuckDB: build only what a change touches, deferring everything
 # else to a baseline built from the base ref.
 #
-#   scripts/slim_ci.sh <base-ref>        e.g. origin/main
+#   tooling/scripts/slim_ci.sh <base-ref>        e.g. origin/main
 #
 # 1. Check out <base-ref> in a worktree and build every project there with the
 #    prod_duckdb target (unprefixed schemas): this is the "production" state.
@@ -14,7 +14,7 @@
 #    model: injected nodes point at dev schemas here and at prod schemas in
 #    the baseline, so state:modified.relation flags all of them.
 # A project that does not exist at <base-ref> is built in full.
-# Both sides read the same raw data (data/raw.duckdb) and profiles.yml.
+# Both sides read the same raw data (data/raw.duckdb) and dbt/profiles.yml.
 # The PR side parses from scratch: a stale target/partial_parse.msgpack can
 # carry old raw_code and make unchanged models look modified.
 set -euo pipefail
@@ -28,19 +28,21 @@ trap 'git -C "$repo" worktree remove --force "$base_dir" >/dev/null 2>&1 || true
 git -C "$repo" worktree add --detach --quiet "$base_dir" "$base_ref"
 echo "==> baseline: $(git -C "$base_dir" log --oneline -1)"
 
-export REPO_ROOT="$repo" DBT_PROFILES_DIR="$repo"
+export REPO_ROOT="$repo" DBT_PROFILES_DIR="$repo/dbt"
+base_projects="$base_dir/dbt/projects"
+[ -d "$base_projects" ] || base_projects="$base_dir/projects"
 for project in "${projects[@]}"; do
-  [ -d "$base_dir/projects/$project" ] || continue
+  [ -d "$base_projects/$project" ] || continue
   echo "==> baseline build: $project"
-  (cd "$base_dir/projects/$project" && uv run --project "$repo" dbt deps --quiet \
+  (cd "$base_projects/$project" && uv run --project "$repo" dbt deps --quiet \
     && DBT_TARGET=prod_duckdb uv run --project "$repo" dbt build --exclude-resource-type unit_test --quiet)
 done
 
 own_changes="state:modified.body+ state:modified.configs+ state:modified.contract+ state:modified.macros+"
 platform_changes=""
 for project in "${projects[@]}"; do
-  state="$base_dir/projects/$project/target"
-  cd "$repo/projects/$project"
+  state="$base_projects/$project/target"
+  cd "$repo/dbt/projects/$project"
   uv run dbt deps --quiet
   if [ -f "$state/manifest.json" ]; then
     if [ "$project" = platform ]; then
@@ -58,7 +60,7 @@ for project in "${projects[@]}"; do
       platform_changes=$(DBT_TARGET=duckdb uv run dbt ls --quiet --select state:modified --state "$state" \
         --exclude package:dbt_project_evaluator \
         --resource-type model --output json --output-keys name version \
-        | uv run python "$repo/scripts/upstream_selectors.py" platform)
+        | uv run python "$repo/tooling/scripts/upstream_selectors.py" platform)
       echo "    platform models changed: ${platform_changes:-none}"
     fi
   else

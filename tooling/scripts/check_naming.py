@@ -143,7 +143,7 @@ def check_project(models_dir: Path) -> list[Violation]:
 
 
 def main(argv: list[str]) -> int:
-    roots = [Path(arg) for arg in argv] or sorted(Path("projects").glob("*/models"))
+    roots = [Path(arg) for arg in argv] or sorted(Path("dbt/projects").glob("*/models"))
     violations = [v for root in roots for v in check_project(root)]
     for violation in violations:
         print(violation)

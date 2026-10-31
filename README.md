@@ -22,9 +22,9 @@ late. Finance reports in USD at the daily ECB reference rate. The data forces
 the models to handle FX carry-forward over weekends, JPY with no minor unit,
 business-time-zone day boundaries, late arrivals and attribution windows.
 
-`generator/generate.py` produces the data deterministically (2,000 customers,
+`tooling/generator/generate.py` produces the data deterministically (2,000 customers,
 50 merchants, 20,000 orders over 2024–2025) using the real ECB rates in
-`generator/reference/`. The default graph has 188 SQL models in 33 model
+`tooling/generator/reference/`. The default graph has 188 SQL models in 33 model
 folders; each populated folder has 5–9 models.
 
 Refund and payout events can fall in January 2026, after the supplied ECB file
@@ -34,6 +34,21 @@ visible.
 
 ## Projects
 
+Repository paths separate the dbt graph from the tools that run the example:
+
+| Path | Contents |
+|---|---|
+| `dbt/projects/` | Independent platform, finance and growth dbt projects |
+| `dbt/packages/` | Shared marketplace macro package |
+| `dbt/profiles.yml` | Shared local adapter profiles |
+| `tooling/generator/`, `tooling/loader/` | Deterministic source data and warehouse loading |
+| `tooling/scripts/`, `tooling/tests/` | Repository checks, slim CI and Python tests |
+| `infra/` | Local Trino, Iceberg catalog and object storage stack |
+| `.agents/skills/dbt-model-governance/` | Versioned modeling and governance skill |
+
+The root `mise.toml` remains the entry point for all tasks. `data/` contains
+generated local artifacts and is ignored by Git.
+
 Three dbt projects, owned by three notional teams:
 
 | Project | Owns | Publishes |
@@ -42,7 +57,7 @@ Three dbt projects, owned by three notional teams:
 | `finance` | billing feed; revenue, settlements, refunds and contribution | merchant and daily financial marts |
 | `growth` | marketing feed; acquisition, cohorts, retention and lifecycle | campaign, customer value and lifecycle marts |
 
-`packages/marketplace_macros` is an internal dbt package that all three
+`dbt/packages/marketplace_macros` is an internal dbt package that all three
 install.
 
 ## What it demonstrates
@@ -53,7 +68,7 @@ install.
 containing platform's code. dbt Cloud resolves cross-project refs natively;
 this repo uses [dbt-loom](https://github.com/nicholasyager/dbt-loom), which
 injects the public nodes of platform's `manifest.json` into the consumer's
-DAG (`projects/*/dbt_loom.config.yml`).
+DAG (`dbt/projects/*/dbt_loom.config.yml`).
 
 Consumers reach platform only through local import models in
 `models/staging/platform/` (`stg__platform__*`). Version pins live in one file,
@@ -70,7 +85,7 @@ before it reaches a consumer. Intermediate models keep the default
 `fct__fx_rates_by_day` has two versions. v2 renamed `rate_to_usd` to
 `rate_to_reporting`; v1 carries a `deprecation_date`, and `finance` still pins
 v1 to show what a consumer sees during a migration
-(`projects/platform/models/marts/fx/_marts__fx.yml`).
+(`dbt/projects/platform/models/marts/fx/_marts__fx.yml`).
 
 The three projects also install [dbt_project_evaluator](https://github.com/dbt-labs/dbt-project-evaluator)
 1.4.1, the release line compatible with this repository's dbt 1.12. Run
@@ -87,7 +102,7 @@ requires review of each model's grain and business purpose.
 
 The same models build on DuckDB and on Trino (Iceberg tables in Garage object
 storage, catalogued by Lakekeeper). Engine differences live in dispatched
-macros under `packages/marketplace_macros/macros/cross_engine/`: date spines,
+macros under `dbt/packages/marketplace_macros/macros/cross_engine/`: date spines,
 epoch conversion, local-day truncation, ISO day of week.
 
 Each project's `dispatch:` search order lists itself before the package, so a
@@ -116,7 +131,7 @@ it in the test with `overrides: vars:`.
 
 `state:modified+ --defer` works inside one project. In a mesh, a change to a
 platform model must also rebuild its descendants in `finance` and `growth`.
-`scripts/slim_ci.sh` builds the PR's changed models plus
+`tooling/scripts/slim_ci.sh` builds the PR's changed models plus
 `platform.<changed model>+` in each consumer, deferring everything else to
 the `main` baseline.
 
@@ -142,7 +157,7 @@ calculation. The folder count is a repository convention, not a reason to add
 models that duplicate a parent's output.
 
 ```
-projects/
+dbt/projects/
   platform/models/
     staging/shop/               stg__shop__orders.sql, _stg__shop.yml
     staging/psp/                stg__psp__payments.sql, _stg__psp.yml
@@ -172,7 +187,7 @@ Each leaf folder holds 5–15 SQL models and one properties file named
 live beside their models in `_<prefix>__<folder>__unit_tests.yml`; the test
 file may target only models in that folder. The properties file declares every
 model, its grain and any public contract, column tests or source definitions.
-`scripts/check_naming.py` enforces the folder size, names and YAML placement in
+`tooling/scripts/check_naming.py` enforces the folder size, names and YAML placement in
 CI. This is a layout rule for this example, not a dbt requirement.
 
 Model SQL lists its projected columns explicitly, including the import models
