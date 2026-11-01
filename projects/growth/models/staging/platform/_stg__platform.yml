@@ -1,9 +1,0 @@
-# Imports from the platform project (resolved by dbt-loom). Everything else in
-# this project refs these wrappers, never ref('platform', ...) directly:
-# - one place to pin or migrate an upstream model version;
-# - unit tests mock local nodes. dbt-core 1.12 builds unit-test fixture nodes
-#   without the producer's `access`, so a fixture for ref('platform', ...) is
-#   treated as protected to platform and rejected under dbt-loom.
-models:
-  - name: stg__platform__orders
-    access: private

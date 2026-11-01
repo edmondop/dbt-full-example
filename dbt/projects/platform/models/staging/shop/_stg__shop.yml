@@ -1,0 +1,83 @@
+sources:
+  - name: shop
+    description: Marketplace application database, replicated daily.
+    database: raw
+    schema: shop
+    tables:
+      - name: customers
+        description: Customer accounts with email, country and account timestamps.
+      - name: merchants
+        description: Merchant identity, settlement currency and local time zone.
+      - name: orders
+        description: Order header, lifecycle status and order timestamp.
+        loaded_at_field: updated_at
+        freshness:
+          warn_after: {count: 1, period: day}
+      - name: order_items
+        description: Quantity, SKU and unit price in minor units for each order line.
+      - name: categories
+        description: Product category lookup.
+      - name: products
+        description: Catalog SKU and category.
+      - name: inventory
+        description: Current on-hand stock by SKU and warehouse.
+      - name: promotions
+        description: Merchant promotion and percentage discount.
+      - name: order_discounts
+        description: Applied promotion and minor-unit discount for an order.
+
+models:
+  - name: stg__shop__customers
+    description: One row per customer.
+    columns:
+      - name: customer_id
+        data_tests: [unique, not_null]
+      - name: country_code
+        data_tests: [not_null]
+
+  - name: stg__shop__merchants
+    description: One row per merchant, with its settlement currency and local timezone.
+    columns:
+      - name: merchant_id
+        data_tests: [unique, not_null]
+      - name: currency_code
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: [EUR, GBP, USD, JPY]
+
+  - name: stg__shop__orders
+    description: One row per order. Amounts live on order items.
+    columns:
+      - name: order_id
+        data_tests: [unique, not_null]
+      - name: customer_id
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('stg__shop__customers')
+                field: customer_id
+      - name: order_status
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: [completed, cancelled, pending]
+
+  - name: stg__shop__order_items
+    description: One row per order line; prices stay in minor units until the order currency is joined.
+    columns:
+      - name: order_item_id
+        data_tests: [unique, not_null]
+      - name: line_amount_minor
+        description: quantity * unit_price_minor
+
+  - name: stg__shop__categories
+    description: One row per product category.
+  - name: stg__shop__products
+    description: One row per catalog SKU with its category.
+  - name: stg__shop__inventory
+    description: One row per SKU and warehouse stock position.
+  - name: stg__shop__promotions
+    description: One row per merchant promotion.
+  - name: stg__shop__order_discounts
+    description: One row per order-level applied promotion.

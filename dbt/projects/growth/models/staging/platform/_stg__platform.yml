@@ -1,0 +1,25 @@
+# Imports from the platform project (resolved by dbt-loom). Everything else in
+# this project refs these wrappers, never ref('platform', ...) directly:
+# - one place to pin or migrate an upstream model version;
+# - unit tests mock local nodes. dbt-core 1.12 builds unit-test fixture nodes
+#   without the producer's `access`, so a fixture for ref('platform', ...) is
+#   treated as protected to platform and rejected under dbt-loom.
+models:
+  - name: stg__platform__orders
+    description: One order-grain import of platform's public order contract.
+    access: private
+
+  - name: stg__platform__customers
+    description: One public customer dimension row per customer.
+  - name: stg__platform__merchants
+    description: One public merchant dimension row per merchant.
+  - name: stg__platform__calendar
+    description: One public calendar dimension row per date.
+  - name: stg__platform__order_lines
+    description: One public order-line fact row per item.
+  - name: stg__platform__products
+    description: One public product dimension row per SKU.
+  - name: stg__platform__shipments
+    description: One public shipment fact row per shipment.
+  - name: stg__platform__payment_attempts
+    description: One public payment fact row per provider attempt.

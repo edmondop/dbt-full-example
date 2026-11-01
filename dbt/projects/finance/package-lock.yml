@@ -1,0 +1,10 @@
+packages:
+  - local: ../../packages/marketplace_macros
+    name: marketplace_macros
+  - name: dbt_project_evaluator
+    package: dbt-labs/dbt_project_evaluator
+    version: 1.4.1
+  - name: dbt_utils
+    package: dbt-labs/dbt_utils
+    version: 1.4.1
+sha1_hash: 649ad1001ca7df7e79af2a21f002f449e7eb03f2

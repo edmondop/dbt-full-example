@@ -1,0 +1,19 @@
+unit_tests:
+  - name: int__acquisition__attributed_orders__respects_thirty_day_window
+    model: int__acquisition__attributed_orders
+    overrides:
+      vars: {attribution_lookback_days: 30}
+    given:
+      - input: ref('int__acquisition__touchpoints')
+        rows:
+          - {customer_id: 1, campaign_id: 2, channel: search, attribution_date: 2025-01-01}
+      - input: ref('stg__platform__orders')
+        rows:
+          - {order_id: 10, customer_id: 1, merchant_id: 3, order_date: 2025-01-31, order_status: completed, order_amount: 100}
+          - {order_id: 11, customer_id: 1, merchant_id: 3, order_date: 2025-02-01, order_status: completed, order_amount: 200}
+      - input: ref('stg__platform__merchants')
+        rows:
+          - {merchant_id: 3, country_code: GB}
+    expect:
+      rows:
+        - {customer_id: 1, campaign_id: 2, channel: search, order_id: 10, merchant_id: 3, merchant_country_code: GB, order_date: 2025-01-31, order_amount: 100}

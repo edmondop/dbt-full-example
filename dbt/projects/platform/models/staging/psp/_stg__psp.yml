@@ -1,0 +1,63 @@
+sources:
+  - name: psp
+    description: >
+      Payment service provider export (Stripe-like). Amounts are integer minor
+      units, currencies are lowercase, `created` is epoch seconds, and
+      `_loaded_at` is when the row reached the export, which can lag `created`
+      by days.
+    database: raw
+    schema: psp
+    tables:
+      - name: payments
+        description: Payment attempts with provider status, epoch event time and export load time.
+        loaded_at_field: _loaded_at
+        freshness:
+          warn_after: {count: 1, period: day}
+      - name: refunds
+        description: Partial or full refunds linked to captured payments.
+        loaded_at_field: _loaded_at
+        freshness:
+          warn_after: {count: 1, period: day}
+      - name: fees
+        description: Provider fee in minor units for each captured payment.
+      - name: disputes
+        description: Provider dispute amount and status for a payment.
+      - name: balance_transactions
+        description: Provider net amount and availability time for a payment.
+      - name: payouts
+        description: Provider payout linked to a merchant and payment.
+
+models:
+  - name: stg__psp__payments
+    description: One row per payment attempt, including failed attempts.
+    columns:
+      - name: payment_id
+        data_tests: [unique, not_null]
+      - name: order_id
+        data_tests: [not_null]
+      - name: payment_status
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: [succeeded, failed]
+
+  - name: stg__psp__refunds
+    description: One row per refund. Partial refunds carry less than the payment amount.
+    columns:
+      - name: refund_id
+        data_tests: [unique, not_null]
+      - name: payment_id
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('stg__psp__payments')
+                field: payment_id
+
+  - name: stg__psp__fees
+    description: One provider fee per captured payment, in minor units.
+  - name: stg__psp__disputes
+    description: One row per payment dispute.
+  - name: stg__psp__balance_transactions
+    description: One provider balance transaction per captured payment.
+  - name: stg__psp__payouts
+    description: One provider payout linked to a payment.

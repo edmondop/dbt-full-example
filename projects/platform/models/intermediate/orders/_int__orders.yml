@@ -1,8 +1,0 @@
-models:
-  - name: int__orders__with_amounts
-    description: >
-      Orders with their total in the order currency (major units) and the
-      order date in var('business_timezone').
-    columns:
-      - name: order_id
-        data_tests: [unique, not_null]

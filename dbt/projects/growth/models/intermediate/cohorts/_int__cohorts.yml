@@ -1,0 +1,16 @@
+models:
+  - name: int__cohorts__first_order_by_customer
+    description: A customer's acquisition cohort is the month of their first completed order.
+    access: private
+    columns:
+      - name: customer_id
+        data_tests: [unique, not_null]
+
+  - name: int__cohorts__cohort_sizes
+    description: New customers in each first-purchase month.
+  - name: int__cohorts__order_months
+    description: Completed order activity by customer and cohort month.
+  - name: int__cohorts__repeat_customers
+    description: Cohort customers who bought in more than one month.
+  - name: int__cohorts__revenue_by_month
+    description: Cohort revenue by activity month and original currency.

@@ -1,0 +1,127 @@
+models:
+  - name: dim__calendar
+    description: One row per calendar day in [var('start_date'), var('end_date')].
+    access: public
+    config:
+      contract: {enforced: true}
+    columns:
+      - {name: date_day, data_type: date, constraints: [type: not_null], data_tests: [unique], description: Calendar
+          date in the reporting period.}
+      - {name: month_start, data_type: date, description: First date of the calendar month.}
+      - {name: calendar_year, data_type: integer, description: Four-digit calendar year.}
+      - {name: iso_day_of_week, data_type: integer, description: Monday = 1 ... Sunday = 7}
+      - {name: is_weekend, data_type: boolean, description: True for Saturday or Sunday.}
+      - {name: is_holiday, data_type: boolean, description: True for a named reference holiday.}
+
+  - name: dim__customers
+    description: One row per customer. No PII.
+    access: public
+    config:
+      contract: {enforced: true}
+    columns:
+      - {name: customer_id, data_type: bigint, constraints: [type: not_null], data_tests: [unique], description:
+          Marketplace customer identifier.}
+      - {name: country_code, data_type: varchar, description: ISO country code of the customer or merchant.}
+      - {name: signup_date, data_type: date, description: "Signup day in var('business_timezone')."}
+      - {name: home_currency_code, data_type: varchar, description: ISO currency of the customer's home market.}
+      - {name: first_order_date, data_type: date, description: First completed-order business date or null.}
+      - {name: completed_order_count, data_type: bigint, description: Number of completed orders.}
+
+  - name: dim__merchants
+    description: One row per merchant.
+    access: public
+    config:
+      contract: {enforced: true}
+    columns:
+      - {name: merchant_id, data_type: bigint, constraints: [type: not_null], data_tests: [unique], description:
+          Marketplace merchant identifier.}
+      - {name: merchant_name, data_type: varchar, description: Merchant display name.}
+      - {name: country_code, data_type: varchar, description: ISO country code of the customer or merchant.}
+      - {name: currency_code, data_type: varchar, description: Settlement currency.}
+      - {name: timezone, data_type: varchar, description: IANA time zone of the merchant.}
+
+  - name: fct__orders
+    description: One row per order, amount in the order currency (major units).
+    access: public
+    config:
+      contract: {enforced: true}
+    columns:
+      - {name: order_id, data_type: bigint, constraints: [type: not_null], data_tests: [unique], description:
+          Marketplace order identifier.}
+      - name: customer_id
+        data_type: bigint
+        data_tests:
+          - relationships:
+              arguments: {to: ref('dim__customers'), field: customer_id}
+        description: Marketplace customer identifier.
+      - name: merchant_id
+        data_type: bigint
+        data_tests:
+          - relationships:
+              arguments: {to: ref('dim__merchants'), field: merchant_id}
+        description: Marketplace merchant identifier.
+      - {name: order_date, data_type: date, description: "Order day in var('business_timezone')."}
+      - {name: order_status, data_type: varchar, description: Order lifecycle state.}
+      - {name: currency_code, data_type: varchar, description: ISO currency code of the original amount or rate.}
+      - {name: order_amount, data_type: "decimal(18, 4)", description: 'Gross order amount in its original currency, in major
+          units.'}
+
+  - name: dim__products
+    description: Product catalog without customer data.
+    access: public
+    config:
+      contract:
+        enforced: true
+    columns:
+      - name: sku
+        data_type: varchar
+        data_tests:
+          - unique
+          - not_null
+        description: Catalog stock-keeping unit identifier.
+      - name: category_id
+        data_type: bigint
+        description: Product category identifier.
+      - name: category_name
+        data_type: varchar
+        description: Product category display name.
+  - name: fct__order_lines
+    description: Order-line grain for product and basket analysis.
+    access: public
+    config:
+      contract:
+        enforced: true
+    columns:
+      - name: order_item_id
+        data_type: bigint
+        data_tests:
+          - unique
+          - not_null
+        description: Order-line identifier.
+      - name: order_id
+        data_type: bigint
+        description: Marketplace order identifier.
+      - name: sku
+        data_type: varchar
+        description: Catalog stock-keeping unit identifier.
+      - name: category_id
+        data_type: bigint
+        description: Product category identifier.
+      - name: quantity
+        data_type: integer
+        description: Number of units on the order line.
+      - name: line_amount_minor
+        data_type: bigint
+        description: Order-line amount in original-currency minor units.
+      - name: currency_code
+        data_type: varchar
+        description: ISO currency code of the original amount or rate.
+
+  - name: fct__completed_orders_net
+    description: Completed order grain with applied promotion and net amount in the order currency.
+
+  - name: fct__customer_spend_by_currency
+    description: Gross completed-order spend per customer and original currency.
+
+  - name: fct__customer_merchant_affinity
+    description: Completed order count per customer and merchant.

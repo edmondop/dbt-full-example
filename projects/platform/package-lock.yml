@@ -1,4 +1,0 @@
-packages:
-  - local: ../../packages/marketplace_macros
-    name: marketplace_macros
-sha1_hash: 238e723db5c91be1f926a296e38764ec728ee280

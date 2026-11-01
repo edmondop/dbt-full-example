@@ -1,0 +1,18 @@
+models:
+  - name: int__revenue__orders_settled
+    description: Completed orders with their USD value at the order day's FX rate.
+    access: private
+    columns:
+      - name: order_id
+        data_tests: [unique, not_null]
+
+  - name: int__revenue__invoices_with_orders
+    description: Invoice grain with order ownership.
+  - name: int__revenue__invoice_lines_by_invoice
+    description: Line count and minor-unit total per invoice.
+  - name: int__revenue__taxed_orders
+    description: Completed order with estimated tax in original currency.
+  - name: int__revenue__invoice_balance
+    description: Invoice-grain billed, credited and adjusted amounts in original minor units.
+  - name: int__revenue__monthly_by_merchant
+    description: Monthly merchant revenue in USD.

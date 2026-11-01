@@ -1,0 +1,51 @@
+# int__fx__rates_by_day is ephemeral in normal runs. Unit tests run with
+# --vars '{unit_testing: true}' (mise run unit), which makes it a view:
+# - dbt-trino creates the unit test relation in the model's schema, and an
+#   ephemeral model never creates that schema (DuckDB happens not to care);
+# - models that ref() it can mock it with dict fixtures, which dbt rejects
+#   for ephemeral inputs (they would need format: sql).
+unit_tests:
+  - name: int__fx__rates_by_day__carries_friday_rate_over_weekend
+    model: int__fx__rates_by_day
+    overrides:
+      vars: {start_date: "2025-01-03", end_date: "2025-01-06"}
+    given:
+      - input: ref('stg__reference__fx_rates')
+        rows:
+          # Friday and Monday published; Saturday and Sunday not.
+          - {rate_date: 2025-01-03, currency_code: USD, units_per_eur: 1.0}
+          - {rate_date: 2025-01-03, currency_code: GBP, units_per_eur: 0.8}
+          - {rate_date: 2025-01-06, currency_code: USD, units_per_eur: 1.0}
+          - {rate_date: 2025-01-06, currency_code: GBP, units_per_eur: 0.5}
+    expect:
+      rows:
+        - {rate_date: 2025-01-03, currency_code: GBP, rate_to_reporting: 1.25, days_carried_forward: 0}
+        - {rate_date: 2025-01-04, currency_code: GBP, rate_to_reporting: 1.25, days_carried_forward: 1}
+        - {rate_date: 2025-01-05, currency_code: GBP, rate_to_reporting: 1.25, days_carried_forward: 2}
+        - {rate_date: 2025-01-06, currency_code: GBP, rate_to_reporting: 2, days_carried_forward: 0}
+        - {rate_date: 2025-01-03, currency_code: EUR, rate_to_reporting: 1, days_carried_forward: 0}
+        - {rate_date: 2025-01-04, currency_code: EUR, rate_to_reporting: 1, days_carried_forward: 1}
+        - {rate_date: 2025-01-05, currency_code: EUR, rate_to_reporting: 1, days_carried_forward: 2}
+        - {rate_date: 2025-01-06, currency_code: EUR, rate_to_reporting: 1, days_carried_forward: 0}
+        - {rate_date: 2025-01-03, currency_code: USD, rate_to_reporting: 1, days_carried_forward: 0}
+        - {rate_date: 2025-01-04, currency_code: USD, rate_to_reporting: 1, days_carried_forward: 1}
+        - {rate_date: 2025-01-05, currency_code: USD, rate_to_reporting: 1, days_carried_forward: 2}
+        - {rate_date: 2025-01-06, currency_code: USD, rate_to_reporting: 1, days_carried_forward: 0}
+
+  - name: int__fx__rates_by_day__nulls_rate_beyond_carry_forward_limit
+    description: A gap longer than var('fx_max_carry_forward_days') must not reuse a stale rate.
+    model: int__fx__rates_by_day
+    overrides:
+      vars: {start_date: "2025-01-01", end_date: "2025-01-03", fx_max_carry_forward_days: 1}
+    given:
+      - input: ref('stg__reference__fx_rates')
+        rows:
+          - {rate_date: 2025-01-01, currency_code: USD, units_per_eur: 1.0}
+    expect:
+      rows:
+        - {rate_date: 2025-01-01, currency_code: USD, rate_to_reporting: 1, days_carried_forward: 0}
+        - {rate_date: 2025-01-02, currency_code: USD, rate_to_reporting: 1, days_carried_forward: 1}
+        - {rate_date: 2025-01-03, currency_code: USD, rate_to_reporting: null, days_carried_forward: 2}
+        - {rate_date: 2025-01-01, currency_code: EUR, rate_to_reporting: 1, days_carried_forward: 0}
+        - {rate_date: 2025-01-02, currency_code: EUR, rate_to_reporting: 1, days_carried_forward: 1}
+        - {rate_date: 2025-01-03, currency_code: EUR, rate_to_reporting: null, days_carried_forward: 2}

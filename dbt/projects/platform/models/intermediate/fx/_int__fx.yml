@@ -1,0 +1,21 @@
+models:
+  - name: int__fx__rates_by_day
+    description: >
+      Rate into var('reporting_currency') for every (calendar day, currency),
+      carrying the last ECB publication forward over non-publication days.
+    columns:
+      - name: rate_to_reporting
+        description: Units of reporting currency per 1 unit of currency_code; null when the last publication is too old.
+      - name: source_rate_date
+        description: ECB publication date the rate comes from.
+      - name: days_carried_forward
+        description: 0 on publication days.
+
+  - name: int__fx__published_rates
+    description: Published reference rates with reporting-currency marker.
+  - name: int__fx__currency_day_coverage
+    description: One row per calendar day and currency, including absent rates.
+  - name: int__fx__missing_rates
+    description: Currency days for which carry-forward policy yields no rate.
+  - name: int__fx__latest_rates
+    description: Most recent usable reporting rate per currency.

@@ -1,0 +1,11 @@
+models:
+  - name: int__fulfillment__shipments_with_orders
+    description: One row per shipment with order ownership.
+  - name: int__fulfillment__shipment_event_summary
+    description: One row per shipment with first and delivery events.
+  - name: int__fulfillment__delivery_attempt_summary
+    description: One row per shipment with attempted and failed deliveries.
+  - name: int__fulfillment__shipments_with_delivery
+    description: One row per shipment with delivery latency and failed attempts.
+  - name: int__fulfillment__delayed_shipments
+    description: One row per shipment delivered more than three days after shipping.

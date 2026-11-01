@@ -1,0 +1,11 @@
+models:
+  - name: fct__campaign_reach
+    description: Impressions and clicks per campaign.
+  - name: fct__channel_acquisition
+    description: Attributed customers and orders by channel.
+  - name: fct__attributed_orders
+    description: Completed orders within the first-touch attribution window.
+  - name: fct__campaign_click_through
+    description: Clicks divided by impressions for each campaign.
+  - name: fct__campaign_customers
+    description: Customers assigned to each first-touch campaign.

@@ -1,0 +1,11 @@
+models:
+  - name: int__margin__order_value_usd
+    description: Completed order value in USD.
+  - name: int__margin__refund_value_usd
+    description: Refund amount in USD at refund-day rate.
+  - name: int__margin__fees_value_usd
+    description: Provider fee in USD at payout-day rate.
+  - name: int__margin__merchant_day_margin
+    description: Merchant-day contribution after refunds and fees.
+  - name: int__margin__negative_margin_days
+    description: Merchant-days with negative contribution.

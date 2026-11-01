@@ -1,0 +1,22 @@
+models:
+  - name: int__payments__net_by_day
+    description: >
+      Gross, refunded and net settled amounts per (payment_date, merchant,
+      currency), in the original currency. Incremental (merge) on Trino,
+      rebuilt as a table on DuckDB; see materialization_for.
+    data_tests:
+      - unique:
+          arguments:
+            column_name: "cast(payment_date as varchar) || '-' || cast(merchant_id as varchar) || '-' || currency_code"
+    columns:
+      - name: max_loaded_at
+        description: Newest PSP load among the day's events; drives the incremental lookback.
+
+  - name: int__payments__succeeded_attempts
+    description: One row per successful payment attempt.
+  - name: int__payments__failed_attempts
+    description: One row per failed payment attempt.
+  - name: int__payments__refunds_with_orders
+    description: One row per successful refund with its order and merchant.
+  - name: int__payments__fees_by_payment
+    description: One row per captured payment with provider fee in major units.

@@ -1,0 +1,137 @@
+models:
+  - name: fct__payments_by_day__usd_total
+    description: >
+      Settled payments per (payment_date, merchant, currency) in the original
+      currency and in USD at that day's rate.
+    access: public
+    config:
+      contract: {enforced: true}
+    data_tests:
+      - unique:
+          arguments:
+            column_name: "cast(payment_date as varchar) || '-' || cast(merchant_id as varchar) || '-' || currency_code"
+    columns:
+      - {name: payment_date, data_type: date, constraints: [type: not_null], description: Business date of the captured
+          payment or refund activity.}
+      - {name: merchant_id, data_type: bigint, constraints: [type: not_null], description: Marketplace merchant
+          identifier.}
+      - {name: currency_code, data_type: varchar, constraints: [type: not_null], description: ISO currency code of the
+          original amount or rate.}
+      - {name: gross_amount, data_type: "decimal(18, 4)", description: 'Captured amount in the original currency, in major
+          units.'}
+      - {name: refunded_amount, data_type: "decimal(18, 4)", description: 'Refunded amount in the original currency, in major
+          units.'}
+      - {name: net_amount, data_type: "decimal(18, 4)", description: Captured less refunded amount in the original
+          currency.}
+      - {name: fx_rate_to_usd, data_type: "decimal(18, 8)", description: USD per one original-currency unit on the
+          payment date.}
+      - {name: gross_amount_usd, data_type: "decimal(18, 4)", description: Captured amount converted to USD at the
+          payment-date rate.}
+      - {name: refunded_amount_usd, data_type: "decimal(18, 4)", description: Refunded amount converted to USD at the
+          payment-date rate.}
+      - name: net_amount_usd
+        data_type: "decimal(18, 4)"
+        data_tests:
+          - not_null:
+              config:
+                severity: warn   # a null means no usable FX rate for that day
+
+        description: Net amount in USD; null when no usable FX rate exists.
+  - name: fct__payment_attempts
+    description: One row per provider payment attempt.
+    access: public
+    config:
+      contract:
+        enforced: true
+    columns:
+      - name: payment_id
+        data_type: varchar
+        data_tests:
+          - unique
+          - not_null
+        description: Payment provider attempt identifier.
+      - name: order_id
+        data_type: bigint
+        description: Marketplace order identifier.
+      - name: merchant_id
+        data_type: bigint
+        description: Marketplace merchant identifier.
+      - name: currency_code
+        data_type: varchar
+        description: ISO currency code of the original amount or rate.
+      - name: amount
+        data_type: decimal(18, 4)
+        description: Amount in the original currency, in major units.
+      - name: payment_status
+        data_type: varchar
+        description: Provider outcome of the payment attempt.
+      - name: created_at
+        data_type: timestamp
+        description: UTC timestamp when the payment attempt was created.
+  - name: fct__refunds
+    description: One row per successful refund.
+    access: public
+    config:
+      contract:
+        enforced: true
+    columns:
+      - name: refund_id
+        data_type: varchar
+        data_tests:
+          - unique
+          - not_null
+        description: Payment provider refund identifier.
+      - name: payment_id
+        data_type: varchar
+        description: Payment provider attempt identifier.
+      - name: order_id
+        data_type: bigint
+        description: Marketplace order identifier.
+      - name: merchant_id
+        data_type: bigint
+        description: Marketplace merchant identifier.
+      - name: currency_code
+        data_type: varchar
+        description: ISO currency code of the original amount or rate.
+      - name: amount
+        data_type: decimal(18, 4)
+        description: Amount in the original currency, in major units.
+      - name: refunded_at
+        data_type: timestamp
+        description: UTC timestamp when the refund was created.
+  - name: fct__disputes
+    description: One row per payment dispute with its order.
+  - name: fct__payouts
+    description: One row per payout with provider net amount.
+    access: public
+    config:
+      contract:
+        enforced: true
+    columns:
+      - name: payout_id
+        data_type: varchar
+        data_tests:
+          - unique
+          - not_null
+        description: Payment provider payout identifier.
+      - name: merchant_id
+        data_type: bigint
+        description: Marketplace merchant identifier.
+      - name: payment_id
+        data_type: varchar
+        description: Payment provider attempt identifier.
+      - name: paid_at
+        data_type: timestamp
+        description: UTC timestamp when the provider paid out this transaction.
+      - name: net_minor
+        data_type: bigint
+        description: Provider payout after fees, in original-currency minor units.
+      - name: currency_code
+        data_type: varchar
+        description: ISO currency code of the original amount or rate.
+      - name: fee_amount
+        data_type: decimal(18, 4)
+        description: Provider fee in original-currency major units.
+
+  - name: fct__failed_payment_attempts
+    description: Failed provider attempts with order and merchant ownership.

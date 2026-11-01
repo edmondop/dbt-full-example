@@ -1,0 +1,11 @@
+models:
+  - name: int__lifecycle__order_counts
+    description: Order counts per customer across all statuses.
+  - name: int__lifecycle__spend_by_currency
+    description: Completed gross spend by customer and original currency.
+  - name: int__lifecycle__delivery_experience
+    description: Shipment count and delivery experience per customer.
+  - name: int__lifecycle__segments
+    description: Customer segment based on completed order count.
+  - name: int__lifecycle__repeat_purchase_days
+    description: Days from first to second distinct purchase day.

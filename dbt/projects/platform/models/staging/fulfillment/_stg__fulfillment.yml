@@ -1,0 +1,31 @@
+sources:
+  - name: fulfillment
+    database: raw
+    schema: fulfillment
+    tables:
+      - name: warehouses
+        description: Warehouse identity and country.
+      - name: carriers
+        description: Carrier identity and display name.
+      - name: shipments
+        description: Shipment identity, order, warehouse, carrier and dispatch time.
+      - name: shipping_labels
+        description: Tracking code issued for a shipment.
+      - name: shipment_events
+        description: Timestamped shipment status transitions.
+      - name: delivery_attempts
+        description: Carrier attempt time and delivery outcome.
+    description: Warehouse and carrier shipment event feed.
+models:
+  - name: stg__fulfillment__warehouses
+    description: One row per warehouse location.
+  - name: stg__fulfillment__carriers
+    description: One row per delivery carrier.
+  - name: stg__fulfillment__shipments
+    description: One row per shipped order.
+  - name: stg__fulfillment__shipping_labels
+    description: One tracking label per shipment.
+  - name: stg__fulfillment__shipment_events
+    description: One timestamped status event per shipment.
+  - name: stg__fulfillment__delivery_attempts
+    description: One delivery attempt per shipment.

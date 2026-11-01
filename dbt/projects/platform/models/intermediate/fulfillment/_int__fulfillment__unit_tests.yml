@@ -1,0 +1,16 @@
+unit_tests:
+  - name: int__fulfillment__shipments_with_delivery__keeps_delay_and_failures
+    model: int__fulfillment__shipments_with_delivery
+    given:
+      - input: ref('int__fulfillment__shipments_with_orders')
+        rows:
+          - {shipment_id: 1, order_id: 1, customer_id: 1, merchant_id: 1, warehouse_id: 1, carrier_id: 1, shipped_at: 2025-01-01}
+      - input: ref('int__fulfillment__shipment_event_summary')
+        rows:
+          - {shipment_id: 1, delivered_at: 2025-01-05}
+      - input: ref('int__fulfillment__delivery_attempt_summary')
+        rows:
+          - {shipment_id: 1, failed_attempts: 1}
+    expect:
+      rows:
+        - {shipment_id: 1, order_id: 1, customer_id: 1, merchant_id: 1, warehouse_id: 1, carrier_id: 1, shipped_at: 2025-01-01, delivered_at: 2025-01-05, delivery_days: 4, failed_attempts: 1}

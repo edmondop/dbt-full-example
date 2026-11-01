@@ -1,0 +1,12 @@
+unit_tests:
+  - name: int__settlements__fees_by_payment__uses_currency_minor_units
+    model: int__settlements__fees_by_payment
+    given:
+      - input: ref('int__settlements__payouts_with_attempts')
+        rows:
+          - {payment_id: jp, merchant_id: 1, paid_at: 2025-01-03, currency_code: JPY, gross_amount: 1000, net_minor: 970}
+          - {payment_id: us, merchant_id: 2, paid_at: 2025-01-03, currency_code: USD, gross_amount: 10, net_minor: 970}
+    expect:
+      rows:
+        - {payment_id: jp, merchant_id: 1, payout_date: 2025-01-03, currency_code: JPY, fee_amount: 30}
+        - {payment_id: us, merchant_id: 2, payout_date: 2025-01-03, currency_code: USD, fee_amount: 0.3}

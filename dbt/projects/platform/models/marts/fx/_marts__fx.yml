@@ -1,0 +1,41 @@
+models:
+  - name: fct__fx_rates_by_day
+    description: >
+      Daily FX rate into the reporting currency for every calendar day and
+      currency, with ECB rates carried forward over non-publication days.
+    access: public
+    latest_version: 2
+    config:
+      contract: {enforced: true}
+    columns:
+      - {name: rate_date, data_type: date, constraints: [type: not_null], description: Calendar date on which this
+          reporting rate applies.}
+      - {name: currency_code, data_type: varchar, constraints: [type: not_null], description: ISO currency code of the
+          original amount or rate.}
+      - {name: reporting_currency_code, data_type: varchar, description: ISO currency code of the reporting amount.}
+      - name: rate_to_reporting
+        data_type: "decimal(18, 8)"
+        description: Units of reporting currency per 1 unit of currency_code; null when the last publication is older
+          than var('fx_max_carry_forward_days').
+      - {name: source_rate_date, data_type: date, description: Date of the last available ECB publication used for this
+          rate.}
+      - {name: is_carried_forward, data_type: boolean, description: True when a prior ECB publication supplies this
+          date.}
+    versions:
+      - v: 2
+      - v: 1
+        # Breaking change in v2: rate_to_usd renamed to rate_to_reporting, and
+        # reporting_currency_code / is_carried_forward added. Consumers pinned
+        # to v=1 get a deprecation warning until they migrate.
+        deprecation_date: 2026-12-31
+        columns:
+          - include: all
+            exclude: [rate_to_reporting, reporting_currency_code, is_carried_forward]
+          - {name: rate_to_usd, data_type: "decimal(18, 8)", description: USD per one original-currency unit.}
+
+  - name: dim__currencies
+    description: Supported currency and minor-unit exponent.
+  - name: fct__fx_coverage
+    description: Number of supported currencies with a usable rate each day.
+  - name: fct__latest_fx_rates
+    description: Latest usable rate to reporting currency per source currency.

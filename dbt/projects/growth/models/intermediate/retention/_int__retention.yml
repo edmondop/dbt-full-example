@@ -1,0 +1,11 @@
+models:
+  - name: int__retention__monthly_activity
+    description: Completed-order activity by customer and calendar month.
+  - name: int__retention__last_order
+    description: Last completed order date per customer.
+  - name: int__retention__second_order
+    description: First completed order date after the customer first-purchase day.
+  - name: int__retention__dormant_customers
+    description: Customers without a completed order during the dormancy window.
+  - name: int__retention__active_customer_months
+    description: Distinct active customers per calendar month.

@@ -1,0 +1,13 @@
+unit_tests:
+  - name: int__retention__dormant_customers__starts_after_ninety_days
+    model: int__retention__dormant_customers
+    overrides:
+      vars: {end_date: "2025-12-31", dormancy_days: 90}
+    given:
+      - input: ref('int__retention__last_order')
+        rows:
+          - {customer_id: 1, last_order_date: 2025-10-01}
+          - {customer_id: 2, last_order_date: 2025-10-02}
+    expect:
+      rows:
+        - {customer_id: 1, last_order_date: 2025-10-01}
