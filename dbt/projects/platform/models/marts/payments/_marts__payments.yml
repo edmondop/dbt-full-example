@@ -1,8 +1,12 @@
 models:
   - name: fct__payments_by_day__usd_total
-    description: >
-      Settled payments per (payment_date, merchant, currency) in the original
-      currency and in USD at that day's rate.
+    description: >-
+      One row per business payment_date, merchant_id and original currency_code. Publishes
+      successful capture/refund totals in original major units and converts each daily measure
+      to USD using that event date's reporting rate. A left join preserves activity without
+      usable FX and leaves its USD amounts null; reporting_currency is required to be USD.
+      Refund dates can extend beyond the reference-rate period, so consumers must check
+      missing-rate coverage before summing converted totals.
     access: public
     config:
       contract: {enforced: true}
@@ -17,14 +21,10 @@ models:
           identifier.}
       - {name: currency_code, data_type: varchar, constraints: [type: not_null], description: ISO currency code of the
           original amount or rate.}
-      - {name: gross_amount, data_type: "decimal(18, 4)", description: 'Captured amount in the original currency, in major
-          units.'}
-      - {name: refunded_amount, data_type: "decimal(18, 4)", description: 'Refunded amount in the original currency, in major
-          units.'}
-      - {name: net_amount, data_type: "decimal(18, 4)", description: Captured less refunded amount in the original
-          currency.}
-      - {name: fx_rate_to_usd, data_type: "decimal(18, 8)", description: USD per one original-currency unit on the
-          payment date.}
+      - {name: gross_amount, data_type: "decimal(18, 4)", description: "Successful captures on payment_date in original-currency major units, excluding failed attempts."}
+      - {name: refunded_amount, data_type: "decimal(18, 4)", description: "Successful refunds occurring on payment_date in original-currency major units, independently of the original purchase date."}
+      - {name: net_amount, data_type: "decimal(18, 4)", description: "Same-day gross_amount minus refunded_amount in original-currency major units; can be negative on refund-heavy days."}
+      - {name: fx_rate_to_usd, data_type: "decimal(18, 8)", description: "USD per one original-currency unit at payment_date; null when no rate survives the date-window and carry-forward policies."}
       - {name: gross_amount_usd, data_type: "decimal(18, 4)", description: Captured amount converted to USD at the
           payment-date rate.}
       - {name: refunded_amount_usd, data_type: "decimal(18, 4)", description: Refunded amount converted to USD at the
@@ -38,7 +38,13 @@ models:
 
         description: Net amount in USD; null when no usable FX rate exists.
   - name: fct__payment_attempts
-    description: One row per provider payment attempt.
+    description: >-
+      One row per provider payment_id with a matching shop order, including succeeded and
+      failed attempts. Publishes original-currency major-unit amount, status, UTC creation
+      time and order/merchant ownership. Failed amounts represent attempted payments rather
+      than captured cash. The public contract keeps retries separate, allowing consumers to
+      count failures or select successful captures without inferring order settlement from the
+      attempt alone.
     access: public
     config:
       contract:
@@ -58,10 +64,10 @@ models:
         description: Marketplace merchant identifier.
       - name: currency_code
         data_type: varchar
-        description: ISO currency code of the original amount or rate.
+        description: "Provider payment currency normalized to uppercase, used to interpret amount."
       - name: amount
         data_type: decimal(18, 4)
-        description: Amount in the original currency, in major units.
+        description: "Attempted amount in major units of currency_code. For failed attempts it represents an attempted payment rather than captured money."
       - name: payment_status
         data_type: varchar
         description: Provider outcome of the payment attempt.
@@ -69,7 +75,12 @@ models:
         data_type: timestamp
         description: UTC timestamp when the payment attempt was created.
   - name: fct__refunds
-    description: One row per successful refund.
+    description: >-
+      One row per successful provider refund_id whose payment and order links resolve.
+      Publishes amount in original-currency major units, currency_code, order/merchant
+      identifiers and UTC refunded_at. Partial refunds remain separate events, and several
+      refunds can reference the same order. Finance imports this public contract to attribute
+      refund activity to customers and convert it at the refund-date FX rate.
     access: public
     config:
       contract:
@@ -92,17 +103,27 @@ models:
         description: Marketplace merchant identifier.
       - name: currency_code
         data_type: varchar
-        description: ISO currency code of the original amount or rate.
+        description: "Provider refund currency normalized to uppercase, used to interpret amount."
       - name: amount
         data_type: decimal(18, 4)
-        description: Amount in the original currency, in major units.
+        description: "Successful refund amount in major units of currency_code; partial refunds retain their individual amounts."
       - name: refunded_at
         data_type: timestamp
         description: UTC timestamp when the refund was created.
   - name: fct__disputes
-    description: One row per payment dispute with its order.
+    description: >-
+      One row per dispute_id whose payment attempt resolves, with order_id, provider dispute
+      status and amount_minor. Retains open and resolved disputes without changing their sign
+      or subtracting them from payment balances. The amount uses the linked payment's
+      currency, which this projection omits; join the payment contract for currency-aware
+      monetary analysis.
   - name: fct__payouts
-    description: One row per payout with provider net amount.
+    description: >-
+      One row per payout_id with matching provider balance, payment and successful-payment fee
+      records. Publishes net_minor in original-currency minor units, fee_amount in major
+      units, currency_code and UTC paid_at. Inner joins exclude incomplete linkages. The
+      example models one payout per captured payment; these measures should not be interpreted
+      as a provider batch containing multiple payments.
     access: public
     config:
       contract:
@@ -125,13 +146,18 @@ models:
         description: UTC timestamp when the provider paid out this transaction.
       - name: net_minor
         data_type: bigint
-        description: Provider payout after fees, in original-currency minor units.
+        description: "Provider balance amount after its capture fee, in original-currency minor units; the generated feed does not net refunds or disputes into this value."
       - name: currency_code
         data_type: varchar
-        description: ISO currency code of the original amount or rate.
+        description: "Currency of the linked provider payment, used for net_minor and fee_amount."
       - name: fee_amount
         data_type: decimal(18, 4)
-        description: Provider fee in original-currency major units.
+        description: "Provider fee linked to the captured payment, converted to major units of currency_code."
 
   - name: fct__failed_payment_attempts
-    description: Failed provider attempts with order and merchant ownership.
+    description: >-
+      One row per failed provider payment_id with a matching order. Exposes the attempted
+      major-unit amount, currency, UTC creation time and merchant for operational
+      investigation. Each retry is a distinct record; no failure amount is subtracted from
+      captured-payment totals. The report inherits the staged failure status and does not
+      classify why an attempt failed.

@@ -28,7 +28,12 @@ sources:
 
 models:
   - name: stg__shop__customers
-    description: One row per customer.
+    description: >-
+      One row per customer_id from the shop account export. Renames the source identifier,
+      lowercases email and uppercases country_code while retaining the source creation and
+      update timestamps as naive UTC values. This is the private account-level input to
+      customer enrichment; the public customer dimension omits email. No deduplication,
+      account-status filtering or historical versioning is performed.
     columns:
       - name: customer_id
         data_tests: [unique, not_null]
@@ -36,7 +41,12 @@ models:
         data_tests: [not_null]
 
   - name: stg__shop__merchants
-    description: One row per merchant, with its settlement currency and local timezone.
+    description: >-
+      One row per merchant_id from the shop merchant export. Standardizes country and
+      settlement-currency codes to uppercase and exposes the merchant name, IANA time zone and
+      creation timestamp. The time zone is descriptive here; downstream order and payment
+      dates use the project-wide business_timezone variable. The model preserves the latest
+      exported merchant attributes rather than tracking historical changes.
     columns:
       - name: merchant_id
         data_tests: [unique, not_null]
@@ -47,7 +57,12 @@ models:
                 values: [EUR, GBP, USD, JPY]
 
   - name: stg__shop__orders
-    description: One row per order. Amounts live on order items.
+    description: >-
+      One row per order_id from the shop order headers, including completed, cancelled and
+      pending orders. Renames the identifier and status, uppercases currency_code and retains
+      customer, merchant and UTC source timestamps. Amounts live on order items and are
+      calculated downstream; this model neither values an order nor treats its status as
+      evidence of a successful payment.
     columns:
       - name: order_id
         data_tests: [unique, not_null]
@@ -64,7 +79,11 @@ models:
                 values: [completed, cancelled, pending]
 
   - name: stg__shop__order_items
-    description: One row per order line; prices stay in minor units until the order currency is joined.
+    description: >-
+      One row per order_item_id from the shop line-item export. Retains order_id, SKU,
+      quantity and unit_price_minor, and calculates line_amount_minor as quantity multiplied
+      by unit price. Both monetary fields use the parent order's currency and remain integer
+      minor units. Product-category enrichment and conversion to major units occur downstream.
     columns:
       - name: order_item_id
         data_tests: [unique, not_null]
@@ -72,12 +91,35 @@ models:
         description: quantity * unit_price_minor
 
   - name: stg__shop__categories
-    description: One row per product category.
+    description: >-
+      One row per category_id from the shop category lookup. Renames the source identifier and
+      category display name without filtering or aggregating records. Products reference this
+      lookup by category_id, allowing the public product dimension to expose category labels
+      without copying order or customer data into the catalog.
   - name: stg__shop__products
-    description: One row per catalog SKU with its category.
+    description: >-
+      One row per catalog SKU, carrying its category_id from the shop product export. The
+      model projects catalog identity without assigning a currency or price: transaction
+      prices belong to order lines. Downstream line enrichment joins on SKU; a catalog match
+      is required there, whereas the public product dimension keeps products with an unknown
+      category label.
   - name: stg__shop__inventory
-    description: One row per SKU and warehouse stock position.
+    description: >-
+      One row per exported SKU and warehouse stock position, with on_hand expressed as a unit
+      count. Reads the current shop inventory extract directly and retains zero-stock
+      positions. The export has no observation timestamp or historical snapshots, so this
+      relation describes the current generated dataset rather than an inventory movement
+      ledger.
   - name: stg__shop__promotions
-    description: One row per merchant promotion.
+    description: >-
+      One row per promotion_id, with the owning merchant_id and advertised discount_percent.
+      Renames the shop promotion identifier and preserves the percentage as supplied. The
+      applied monetary discount is recorded separately in order_discounts; downstream
+      net-order amounts subtract that recorded amount rather than recomputing it from this
+      percentage.
   - name: stg__shop__order_discounts
-    description: One row per order-level applied promotion.
+    description: >-
+      One row per order_discount_id linking an order to an applied promotion. amount_minor is
+      the recorded discount in the parent order's currency, retained in minor units. The model
+      renames the source identifier and leaves multiple discount records intact so the
+      order-level intermediate can count and sum them before joining to order headers.

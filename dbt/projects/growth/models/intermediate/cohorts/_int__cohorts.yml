@@ -1,16 +1,39 @@
 models:
   - name: int__cohorts__first_order_by_customer
-    description: A customer's acquisition cohort is the month of their first completed order.
+    description: >-
+      One row per customer_id with a completed purchase. Takes the minimum business order_date
+      and truncates that date to the first of its calendar month as cohort_month. Cohorts are
+      therefore based on first completed purchase rather than account signup or campaign
+      attribution. Customers without completed orders are absent.
     access: private
     columns:
       - name: customer_id
         data_tests: [unique, not_null]
 
   - name: int__cohorts__cohort_sizes
-    description: New customers in each first-purchase month.
+    description: >-
+      One row per first-purchase cohort_month with at least one customer. Counts rows from the
+      customer first-order relation, whose intended grain is one customer. The value is the
+      fixed cohort denominator for monthly retention calculations over the available dataset.
+      It excludes prospects and customers with only pending or cancelled orders.
   - name: int__cohorts__order_months
-    description: Completed order activity by customer and cohort month.
+    description: >-
+      One row derived from each completed order with a known first-purchase cohort. Adds
+      cohort_month and activity_month, the calendar month containing the business order_date,
+      while retaining original currency and gross major-unit order_amount. Multiple purchases
+      in a customer-month remain separate. order_id is omitted from the projection, so the
+      displayed columns do not form a unique order key.
   - name: int__cohorts__repeat_customers
-    description: Cohort customers who bought in more than one month.
+    description: >-
+      One row per customer_id and cohort_month whose completed purchases span more than one
+      distinct activity_month. Counts active_months after the cohort/order join. Two orders in
+      the same month do not qualify on their own, and a customer can qualify after skipping
+      months. This is a multi-month repeat-purchase population, not a consecutive-month
+      retention measure.
   - name: int__cohorts__revenue_by_month
-    description: Cohort revenue by activity month and original currency.
+    description: >-
+      One row per cohort_month, activity_month and original currency_code with completed-order
+      activity. Sums gross major-unit order_amount from the order-derived cohort rows without
+      deduplicating customer-months. The result preserves currencies separately and excludes
+      promotional deductions and refunds. It feeds the cohort revenue mart without converting
+      the values into a common reporting currency.

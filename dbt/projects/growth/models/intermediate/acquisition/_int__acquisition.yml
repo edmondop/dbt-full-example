@@ -1,11 +1,37 @@
 models:
   - name: int__acquisition__touchpoints
-    description: Customer first-touch campaign and channel.
+    description: >-
+      One row per supplied customer-campaign attribution assignment with a matching campaign.
+      Inner-joins the assignment to the campaign lookup to attach channel and directly casts
+      UTC attributed_at to attribution_date. This prepares the date-window join to orders; it
+      does not infer a first touch from observed impressions or clicks. The generated input
+      assumes one assignment per customer.
   - name: int__acquisition__impressions_by_campaign
-    description: Campaign reach from impressions.
+    description: >-
+      One row per campaign_id with at least one impression. Counts impression records and
+      distinct customer_id values as reached_customers over the full exported period. There is
+      no date grouping or deduplication beyond the distinct-customer count. Campaigns without
+      impressions are absent here and receive zero counts in the reach mart's left join.
   - name: int__acquisition__clicks_by_campaign
-    description: Campaign clicks linked to impressions.
+    description: >-
+      One row per campaign_id with clicks linked to known impressions. Inner-joins click
+      events to impressions by impression_id to resolve the campaign, then counts click
+      records and distinct clicking customers. Unknown impression links are excluded. Several
+      clicks can reference one impression, so click_count is an event count rather than the
+      number of impressions that received a click.
   - name: int__acquisition__attributed_orders
-    description: Completed orders within the configured first-touch attribution window.
+    description: >-
+      One row per eligible order and supplied attribution assignment with a matching merchant;
+      the generated single-assignment feed yields one row per order. Retains orders whose
+      business order_date is between zero and attribution_lookback_days after the UTC-cast
+      attribution_date, inclusive at both boundaries. Adds campaign, channel and current
+      merchant country. order_amount is gross major-unit value in each order's original
+      currency, but the projection omits currency_code; consumers need the order contract
+      before aggregating monetary values across currencies.
   - name: int__acquisition__channel_performance
-    description: Attributed customers and orders per acquisition channel.
+    description: >-
+      One row per channel with at least one attributed completed order. Counts distinct
+      customers and distinct order identifiers from the attribution-window relation, avoiding
+      repeated identifiers in those metrics. Customers assigned to a channel but without an
+      eligible purchase are absent from the numerator. This output supplies acquisition counts
+      without a reach denominator, campaign spend or conversion-rate calculation.

@@ -1,8 +1,13 @@
 models:
   - name: int__fx__rates_by_day
-    description: >
-      Rate into var('reporting_currency') for every (calendar day, currency),
-      carrying the last ECB publication forward over non-publication days.
+    description: >-
+      One row per rate_date and currency with an observed reporting cross-rate, expanded
+      across the inclusive start_date/end_date spine. Adds EUR at one unit per EUR, computes
+      reporting units per source unit as reporting_per_eur divided by source_per_eur, and
+      carries the last publication forward up to fx_max_carry_forward_days. Dates before the
+      first usable publication or beyond the limit retain a null rate. source_rate_date and
+      days_carried_forward expose provenance. The model is ephemeral normally and becomes a
+      view for unit-test fixtures.
     columns:
       - name: rate_to_reporting
         description: Units of reporting currency per 1 unit of currency_code; null when the last publication is too old.
@@ -12,10 +17,30 @@ models:
         description: 0 on publication days.
 
   - name: int__fx__published_rates
-    description: Published reference rates with reporting-currency marker.
+    description: >-
+      One row per published currency_code and rate_date from the unpivoted ECB feed. Retains
+      units_per_eur and marks whether the quoted currency equals reporting_currency. The
+      relation measures publication activity before EUR synthesis or carry-forward, so its
+      currency counts can differ from the supported-currency coverage counts for the same
+      date.
   - name: int__fx__currency_day_coverage
-    description: One row per calendar day and currency, including absent rates.
+    description: >-
+      One row per reference-calendar date_day and supported currency_code, including dates
+      with no usable rate. Cross-joins the two reference lookups, then left-joins the daily
+      reporting-rate relation. has_rate tests whether rate_to_reporting is non-null;
+      source_rate_date can still identify a publication that is too old to use. The reference
+      calendar determines this model's date coverage.
   - name: int__fx__missing_rates
-    description: Currency days for which carry-forward policy yields no rate.
+    description: >-
+      One row per supported currency_code and reference date_day for which has_rate is false.
+      Filters the complete currency-day coverage grid and retains source_rate_date for
+      diagnosis. A missing usable rate can mean no prior publication, an unsupported
+      reporting-rate path or a publication beyond the carry-forward limit; the relation does
+      not substitute zero or a stale rate.
   - name: int__fx__latest_rates
-    description: Most recent usable reporting rate per currency.
+    description: >-
+      One row per currency_code with at least one usable reporting rate. Finds the maximum
+      rate_date whose rate_to_reporting is non-null, then returns that date and value from the
+      daily rate relation. The selected date may itself use a carried-forward publication.
+      Latest refers to the configured dataset window, not wall-clock freshness or an intraday
+      market quote.

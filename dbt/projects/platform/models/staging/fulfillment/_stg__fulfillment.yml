@@ -18,14 +18,38 @@ sources:
     description: Warehouse and carrier shipment event feed.
 models:
   - name: stg__fulfillment__warehouses
-    description: One row per warehouse location.
+    description: >-
+      One row per warehouse_id from the fulfillment location lookup. Renames the source
+      identifier and uppercases country_code. Inventory positions and shipments use this
+      identifier to identify their storage or dispatch location. The relation exposes the
+      current generated warehouse attributes without location history or a capacity measure.
   - name: stg__fulfillment__carriers
-    description: One row per delivery carrier.
+    description: >-
+      One row per carrier_id from the fulfillment carrier lookup, with a display name. The
+      model performs identifier and name normalization only. Delivery-attempt reporting joins
+      carriers through the shipment's carrier_id, so attempts without a matching carrier are
+      excluded by that downstream inner join.
   - name: stg__fulfillment__shipments
-    description: One row per shipped order.
+    description: >-
+      One row per shipment_id linking an order to a warehouse and carrier, with shipped_at
+      retained as a naive UTC timestamp. The generated feed contains one shipment for each
+      selected completed order; the SQL preserves the source grain. Delivery outcomes and
+      elapsed-day measures come from separate event and attempt feeds downstream.
   - name: stg__fulfillment__shipping_labels
-    description: One tracking label per shipment.
+    description: >-
+      One row per issued shipment label, carrying shipment_id and tracking_code. The generated
+      feed supplies one label per shipment, which the public shipment fact uses as a nullable
+      lookup. The staging model does not select a latest label or deduplicate replacements;
+      additional labels for one shipment would multiply rows in the downstream join.
   - name: stg__fulfillment__shipment_events
-    description: One timestamped status event per shipment.
+    description: >-
+      One row per shipment status event, identified by shipment_id, event_at and event_status.
+      Renames the source status and retains the naive UTC timestamp. Multiple events per
+      shipment remain separate. The event summary later chooses the earliest event time and
+      the latest timestamp whose status is delivered.
   - name: stg__fulfillment__delivery_attempts
-    description: One delivery attempt per shipment.
+    description: >-
+      One row per exported delivery attempt with shipment_id, UTC attempt_at and outcome. The
+      generated feed has one attempt per shipment, while the downstream summary can count
+      multiple attempt records. Failed attempts remain visible even when a separate shipment
+      event records eventual delivery; this model does not reconcile those two feeds.

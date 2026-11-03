@@ -1,11 +1,36 @@
 models:
   - name: fct__contribution_by_day__usd_total
-    description: Merchant-day contribution after refunds and fees.
+    description: >-
+      One row per report_date and merchant_id with order, refund or fee activity. Publishes
+      gross order-value revenue, refunds, inferred provider fees and their arithmetic
+      contribution in USD from the event-date margin intermediate. Refund-only and fee-only
+      days are retained. Missing FX can produce partial sums; the measure also excludes
+      promotional deductions, product costs and other operating expenses.
   - name: fct__contribution_by_merchant__usd_total
-    description: Cumulative merchant contribution in USD.
+    description: >-
+      One row per merchant_id, summing daily contribution_usd over the available event dates.
+      Orders contribute on order date, refunds on refund date and fees on payout date. The
+      result inherits incomplete null-FX sums and excludes promotions, product costs and other
+      expenses. It summarizes the example's contribution calculation rather than an audited
+      profit or settlement balance.
   - name: fct__negative_margin_days
-    description: Merchant-days with negative contribution.
+    description: >-
+      One row per merchant_id and report_date with strictly negative daily contribution_usd.
+      Exposes the USD revenue, refund and fee components so a negative day can be traced to
+      its event-date calculation. Zero or null contributions are absent. The report inherits
+      the upstream treatment of missing FX and the limited set of costs included in
+      contribution.
   - name: fct__fee_burden_by_merchant__usd_total
-    description: Provider fees in USD by merchant.
+    description: >-
+      One row per merchant_id with matched provider fees. Sums inferred fee_usd after
+      converting each original-currency gross-minus-net difference at the payout-date FX rate.
+      The output is a USD amount, not a percentage of sales. Null conversions are skipped by
+      SQL SUM, so fees outside the reference-rate window can leave the reported burden
+      incomplete.
   - name: fct__refund_burden_by_merchant__usd_total
-    description: Refunds in USD by merchant.
+    description: >-
+      One row per merchant_id with successful, order-linked refunds. Sums refund amounts
+      converted to USD at each UTC-cast refund date. This values refunds when they occur
+      rather than reversing the original order-date USD amount. SQL SUM omits null
+      conversions, so the report needs FX-coverage checks before its totals are treated as
+      complete.

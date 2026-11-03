@@ -1,11 +1,37 @@
 models:
   - name: int__margin__order_value_usd
-    description: Completed order value in USD.
+    description: >-
+      One row per completed order_id, projecting merchant_id, business order_date and
+      order_amount_usd from the order valuation relation. This is the order-value event stream
+      used in daily contribution calculations. The value precedes discounts and refunds, and a
+      missing order-date FX rate remains null rather than being assigned a zero or a later
+      conversion rate.
   - name: int__margin__refund_value_usd
-    description: Refund amount in USD at refund-day rate.
+    description: >-
+      One row per successful, order-linked refund_id with its merchant and UTC-cast
+      refund_date. Left-joins the pinned FX contract on refund date and original currency,
+      then converts the major-unit refund amount to decimal USD. Missing or out-of-window
+      rates leave refunded_usd null. This values the refund on its own event date rather than
+      reversing the original order's USD valuation.
   - name: int__margin__fees_value_usd
-    description: Provider fee in USD at payout-day rate.
+    description: >-
+      One row per matched payment/payout fee record, retaining merchant_id and payout_date.
+      Left-joins the pinned FX contract for the payout date and original currency and
+      multiplies inferred major-unit fee_amount by rate_to_usd. Missing rates leave fee_usd
+      null. The resulting event stream assigns fee expense to payout date rather than payment
+      creation or order date.
   - name: int__margin__merchant_day_margin
-    description: Merchant-day contribution after refunds and fees.
+    description: >-
+      One row per report_date and merchant_id with order, refund or fee activity. Unions
+      completed order values on order date, refund USD values on refund date and inferred fees
+      on payout date, then subtracts refund and fee sums from gross order-value revenue.
+      Refund-only and fee-only dates remain present. SQL SUM ignores null conversions, so
+      mixed activity can yield incomplete numeric totals when FX is missing; this is an
+      illustrative event-date contribution measure, not an audited accounting margin.
   - name: int__margin__negative_margin_days
-    description: Merchant-days with negative contribution.
+    description: >-
+      One row per merchant_id and report_date where the calculated daily contribution_usd is
+      strictly negative. Retains revenue, refund and fee components for diagnosing the
+      deficit. Zero and null contributions are excluded by the comparison. The result inherits
+      the event-date valuation and missing-FX limitations of merchant_day_margin rather than
+      independently reconciling the underlying financial events.

@@ -16,12 +16,35 @@ sources:
     description: Finance-owned invoices, credit notes, tax rates and adjustments.
 models:
   - name: stg__billing__invoices
-    description: One invoice per completed order.
+    description: >-
+      One row per invoice_id from the billing export, linking the invoice to order_id and its
+      UTC issued_at timestamp. Renames the source identifier and retains the source grain
+      without status filtering or joining order values. The generated dataset issues one
+      invoice per completed order; currency and merchant ownership are resolved from platform
+      orders downstream.
   - name: stg__billing__invoice_lines
-    description: One billed order line per invoice.
+    description: >-
+      One row per invoice_line_id with invoice_id and amount_minor from the billing export.
+      Amounts remain in the parent order's currency and integer minor units; there is no
+      independent currency field in this feed. Multiple lines per invoice are preserved for
+      the invoice-level aggregation and reconciliation calculations.
   - name: stg__billing__credit_notes
-    description: One credit note per refunded payment.
+    description: >-
+      One row per credit_note_id linked to invoice_id, with a credited amount in
+      original-currency minor units. The source amount is retained as supplied; invoice
+      reconciliation subtracts the aggregate credited amount downstream. The generated feed
+      creates a credit note for each refund, while this staging relation does not verify a
+      refund or payment linkage.
   - name: stg__billing__tax_rates
-    description: One estimated tax rate per country.
+    description: >-
+      One row per country_code with an estimated rate_percent from the billing reference
+      export. The percentage uses whole percentage units, so a value of 20 becomes 0.20 when
+      divided by 100 downstream. Finance joins it using the merchant's country; the example
+      has no effective dates, product tax classes or jurisdiction-specific tax calculation.
   - name: stg__billing__adjustments
-    description: One manual invoice adjustment.
+    description: >-
+      One row per adjustment_id linked to an invoice, retaining amount_minor as a signed
+      billing adjustment in the invoice's original currency. Downstream reconciliation adds
+      the sum of these amounts to billed value less credits. The generated example uses
+      positive adjustments; the SQL preserves either sign and applies no approval-state or
+      effective-date filter.

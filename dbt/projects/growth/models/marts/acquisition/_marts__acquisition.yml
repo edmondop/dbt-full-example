@@ -1,11 +1,37 @@
 models:
   - name: fct__campaign_reach
-    description: Impressions and clicks per campaign.
+    description: >-
+      One row per campaign_id from the campaign lookup, with channel and observed
+      impression/click counts. Left-joins the two event summaries and replaces missing counts
+      with zero, preserving campaigns without recorded engagement. Counts cover the full
+      source period and represent events. Repeated clicks on an impression can make
+      click_count larger than the number of clicked impressions.
   - name: fct__channel_acquisition
-    description: Attributed customers and orders by channel.
+    description: >-
+      One row per channel with an attributed completed purchase inside
+      attribution_lookback_days. Publishes distinct attributed_customers and attributed_orders
+      from the channel summary. Channels whose assigned customers never make an eligible
+      purchase are absent. The relation supplies acquisition counts without a reach, signup or
+      spend denominator, so it does not directly measure conversion efficiency.
   - name: fct__attributed_orders
-    description: Completed orders within the first-touch attribution window.
+    description: >-
+      One row per eligible order and supplied attribution assignment within the inclusive
+      acquisition window; the generated feed has one assignment per customer. Publishes
+      campaign/channel, customer, merchant, current merchant country, business order_date and
+      gross original-currency order_amount. Currency is not projected, so monetary
+      cross-currency analysis requires joining the order contract. The attribution is an
+      imported assignment rather than a causal claim about campaign effectiveness.
   - name: fct__campaign_click_through
-    description: Clicks divided by impressions for each campaign.
+    description: >-
+      One row per campaign_id, reporting impression_count, click_count and click_through_rate
+      as clicks divided by impressions. The numerator counts click events, not distinct
+      clicked impressions or customers, so repeated clicks can produce a rate above one.
+      Campaigns with zero impressions retain a null rate through nullif rather than being
+      assigned zero.
   - name: fct__campaign_customers
-    description: Customers assigned to each first-touch campaign.
+    description: >-
+      One row per campaign_id with supplied first-touch assignments. Counts distinct
+      customer_id values from the attribution lookup joined to known campaigns. Customers
+      qualify through an assignment even when they have no completed purchase or recorded
+      click. This is an assigned-customer count; compare it with window-qualified acquisition
+      counts only after accounting for their different populations.

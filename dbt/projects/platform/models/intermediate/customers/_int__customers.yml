@@ -1,11 +1,33 @@
 models:
   - name: int__customers__first_order
-    description: First completed order date per customer.
+    description: >-
+      One row per customer_id with at least one completed order. Takes the minimum
+      business-time-zone order_date from completed orders to establish the customer's first
+      purchase date. Customers with no completed purchases are absent here and are retained
+      with a null first_order_date when the public customer dimension left-joins this summary.
   - name: int__customers__order_counts
-    description: Order and completed-order counts per customer.
+    description: >-
+      One row per customer_id appearing in the order headers. Counts all orders and separately
+      sums those whose status is completed. Customers with only pending or cancelled orders
+      therefore have a zero completed count. Accounts without any order are absent from this
+      summary and receive zero when the public customer dimension joins it.
   - name: int__customers__lifetime_spend
-    description: Completed gross spend per customer and original currency.
+    description: >-
+      One row per customer_id and currency_code with completed purchases. Sums gross
+      major-unit order_amount over all completed orders present in the dataset. Keeps each
+      transaction currency separate, so a customer can have several rows. The measure excludes
+      promotional deductions and refunds and has no observation-date cutoff beyond the
+      available input data.
   - name: int__customers__with_country_currency
-    description: Customer with home-market currency.
+    description: >-
+      One row per staged customer_id, enriched with the home currency for the account's
+      country. Left-joins the country reference, preserving accounts with no mapping and
+      leaving home_currency_code null. Retains the account creation timestamp for signup-date
+      derivation. The mapped home currency is an account attribute and does not replace
+      currencies recorded on orders.
   - name: int__customers__merchant_affinity
-    description: Completed order count per customer and merchant.
+    description: >-
+      One row per customer_id and merchant_id with at least one completed order. Counts
+      completed order records for the pair to measure observed repeat purchasing at a
+      merchant. The count covers the full input period, ignores cancelled and pending orders,
+      and is not a share or ranking of the customer's merchants.

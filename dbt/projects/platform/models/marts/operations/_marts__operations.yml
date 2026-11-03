@@ -1,6 +1,11 @@
 models:
   - name: fct__shipments
-    description: Shipment grain with measured delivery time.
+    description: >-
+      One row per order-linked shipment_id, exposing customer/merchant ownership, UTC shipping
+      and delivery timestamps, day difference and tracking code under a public contract. A
+      missing delivery event leaves duration null; a missing label leaves tracking_code null.
+      The label join assumes one source label per shipment. Growth uses the delivery measures
+      to summarize customer experience.
     access: public
     config:
       contract:
@@ -29,15 +34,35 @@ models:
         description: UTC timestamp of the delivered shipment event.
       - name: delivery_days
         data_type: integer
-        description: Elapsed calendar days from shipment to delivery.
+        description: "Adapter-calculated day difference between UTC shipped_at and delivered_at; null without a delivered event. No business-day calendar is applied."
       - name: tracking_code
         data_type: varchar
         description: Carrier tracking code on the issued shipping label.
   - name: fct__delivery_attempts
-    description: One row per carrier delivery attempt.
+    description: >-
+      One row per carrier attempt with shipment_id, order_id, attempt_at, outcome and carrier
+      name. Inner-joins attempts to shipments and carriers, excluding unmatched records.
+      attempt_at is UTC and outcomes are retained as reported, independently of later
+      delivered status events. Count rows as attempts, rather than treating shipment_id as
+      unique if the source gains retries.
   - name: fct__delayed_shipments
-    description: Shipments delivered after the three-day operational target.
+    description: >-
+      One row per shipment_id delivered more than three adapter-calculated days after
+      shipping. Exposes order and merchant identifiers, delivery_days and failed_attempts for
+      operational exception reporting. The threshold is a strict greater-than-three filter.
+      Undelivered shipments have null duration and are absent, so this report does not
+      identify shipments currently overdue in transit.
   - name: dim__warehouses
-    description: Warehouse locations.
+    description: >-
+      One row per warehouse_id with its current country_code from the fulfillment location
+      feed. Supplies the warehouse lookup for inventory and dispatch reporting without adding
+      capacity, stock or shipment measures. There are no effective dates or historical
+      location versions, so joining it to an older transaction uses the current exported
+      warehouse attributes.
   - name: fct__inventory_snapshot
-    description: Current on-hand stock per product and warehouse.
+    description: >-
+      One row per matched SKU and warehouse stock position. Joins current shop inventory to
+      the product catalog to attach category_id and retains on_hand as a unit count, including
+      zero stock. Unknown SKUs are removed by the inner join. The source supplies no
+      observation timestamp or movement history, so this relation cannot establish inventory
+      changes between dates.

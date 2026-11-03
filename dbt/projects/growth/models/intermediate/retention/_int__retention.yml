@@ -1,11 +1,34 @@
 models:
   - name: int__retention__monthly_activity
-    description: Completed-order activity by customer and calendar month.
+    description: >-
+      One row per customer_id and activity_month with at least one completed order. Truncates
+      the producer's business order_date to calendar month start and counts completed orders
+      in that month. Months without purchases have no row. This is the purchase-activity input
+      for distinct active-customer reporting, rather than an account-login or browsing
+      activity measure.
   - name: int__retention__last_order
-    description: Last completed order date per customer.
+    description: >-
+      One row per customer_id with a completed order, containing the maximum business
+      order_date in the input. Pending and cancelled orders do not advance the date, and
+      accounts with no completed purchase are absent. The dormancy calculation compares this
+      observed last purchase against the configured end_date rather than the current clock.
   - name: int__retention__second_order
-    description: First completed order date after the customer first-purchase day.
+    description: >-
+      One row per customer_id with a completed purchase on a date after first_order_date.
+      Joins the first-purchase relation and chooses the minimum later order_date, retaining
+      both dates for interval calculations. Several orders on the first purchase date do not
+      establish a second_order_date. The model measures the next distinct purchase day rather
+      than ranking individual order timestamps.
   - name: int__retention__dormant_customers
-    description: Customers without a completed order during the dormancy window.
+    description: >-
+      One row per previously purchasing customer whose last completed order is more than
+      dormancy_days before end_date. Uses a strict greater-than comparison, so exactly the
+      configured day count remains outside the dormant population. The reference date is a
+      project variable, allowing reproducible historical reports. Accounts without any
+      completed order are absent because they have no last-order row.
   - name: int__retention__active_customer_months
-    description: Distinct active customers per calendar month.
+    description: >-
+      One row per activity_month with purchasing activity. Counts distinct customer_id values
+      from the customer-month purchase relation, giving each customer one contribution
+      regardless of order frequency. Empty months are absent here. The reporting mart later
+      joins the platform calendar's months to expose those gaps as zero active customers.

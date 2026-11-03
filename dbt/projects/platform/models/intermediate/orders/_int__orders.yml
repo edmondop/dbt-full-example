@@ -1,17 +1,39 @@
 models:
   - name: int__orders__with_amounts
-    description: >
-      Orders with their total in the order currency (major units) and the
-      order date in var('business_timezone').
+    description: >-
+      One row per order_id across all order statuses. Aggregates line_amount_minor by order,
+      left-joins the total to headers, and assigns zero to orders without items. Derives
+      order_date in business_timezone and converts the total to major units using
+      currency_minor_units. Promotional discounts, refunds and payment status do not alter
+      this gross order amount.
     columns:
       - name: order_id
         data_tests: [unique, not_null]
 
   - name: int__orders__order_lines_with_products
-    description: One row per order line with catalog category and order currency.
+    description: >-
+      One row per matched order_item_id, carrying quantity, line_amount_minor, product
+      category and order currency. Inner-joins staged items to catalog products by SKU and
+      headers by order_id. Missing product or header matches remove the line. Amounts remain
+      original-currency minor units; the result supplies the public order-line fact without
+      aggregating the basket.
   - name: int__orders__discounts_by_order
-    description: One row per discounted order.
+    description: >-
+      One row per order_id with at least one discount record. Counts discount rows, sums
+      amount_minor and selects the maximum promotion_id as the promotion to expose downstream.
+      The generated data has one promotion per discounted order; if multiple promotions occur,
+      the monetary sum includes all of them while the selected identifier describes only the
+      maximum one.
   - name: int__orders__completed
-    description: One row per completed order with its gross amount.
+    description: >-
+      One row per order_id whose shop status is completed. Projects the order valuation
+      relation with its original-currency amounts, customer, merchant and business date. This
+      common filtered input supplies customer purchase summaries and discount calculations. It
+      does not check whether a successful provider payment or payout exists for the order.
   - name: int__orders__with_discounts
-    description: One row per completed order after promotional discounts.
+    description: >-
+      One row per completed order_id with gross and promotional net amounts. Left-joins the
+      summed recorded discounts and selected promotion to completed orders, substitutes zero
+      for an absent discount, and subtracts the converted discount from gross order_amount.
+      applied_discount_percent is descriptive; net_order_amount uses the recorded minor-unit
+      amount. An order without a matching promotion retains a null percentage.

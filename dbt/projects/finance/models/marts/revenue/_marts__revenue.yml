@@ -1,6 +1,11 @@
 models:
   - name: fct__revenue_by_day__usd_total
-    description: Completed-order revenue per (order_date, merchant) in USD.
+    description: >-
+      One row per business order_date and merchant_id with completed orders. Reports
+      completed_orders and the sum of gross order_amount_usd valued at each order day's FX
+      rate. Refunds, discounts and fees are not deducted. Orders with missing FX remain in the
+      count while SQL SUM omits their null values, so the amount can understate total gross
+      order value.
     access: protected
     config:
       contract: {enforced: true}
@@ -11,14 +16,44 @@ models:
       - {name: revenue_usd, data_type: "decimal(18, 4)"}
 
   - name: fct__revenue_by_month__usd_total
-    description: Monthly merchant revenue in USD.
+    description: >-
+      One row per revenue_month and merchant_id, publishing the monthly completed-order
+      summary with month represented by its first calendar date. Counts completed orders and
+      reports gross USD order value using order-date conversions. It retains months with
+      observed purchases rather than filling a date spine. Null FX values are skipped by the
+      upstream sum even though affected orders remain counted.
   - name: fct__revenue_by_merchant__usd_total
-    description: Lifetime completed-order revenue by merchant.
+    description: >-
+      One row per merchant_id with completed orders over the available dataset. Sums gross USD
+      order valuations across dates and original currencies after each order has been
+      converted at its order-date rate. The result precedes promotional deductions and
+      refunds. SQL SUM omits null conversions, so the merchant total requires a separate
+      FX-coverage check.
   - name: fct__revenue_by_country__usd_total
-    description: Completed-order revenue by merchant country.
+    description: >-
+      One row per current merchant country_code with matched completed orders. Joins
+      order-date USD valuations to the merchant dimension and sums gross order value by
+      merchant country, rather than customer destination. Missing merchant matches are
+      excluded; null FX valuations are skipped by SUM. The dimension has no effective dates,
+      so current merchant attributes classify historical order activity.
   - name: fct__revenue_by_currency__usd_total
-    description: Completed-order USD revenue by original currency.
+    description: >-
+      One row per original currency_code with completed orders. Reports order count and gross
+      revenue_usd after converting each order at its order-date rate, allowing comparison of
+      the original currency mix in a shared USD unit. The count includes orders with missing
+      FX while the sum omits their null valuations. No refund, promotion or fee deductions are
+      made.
   - name: fct__invoice_reconciliation
-    description: Invoice-grain billed, credited and adjusted amounts in original minor units.
+    description: >-
+      One row per order-linked invoice_id, exposing billed, credited, adjusted and net billed
+      amounts with merchant and original currency. All monetary columns are minor units;
+      net_billed_minor is billed less credits plus signed adjustments. Missing billing
+      components are zero-filled upstream. This report explains invoice composition without
+      proving collection or computing a variance against the order's gross value.
   - name: fct__estimated_tax_by_merchant
-    description: Estimated tax per merchant and original currency for completed orders.
+    description: >-
+      One row per merchant_id and original currency_code with completed orders and valid tax
+      lookups. Counts included orders and sums estimated_tax in major units of that currency.
+      The estimate uses the merchant country's supplied percentage applied to gross
+      order_amount. It has no customer-location, effective-date or tax-inclusive pricing logic
+      and should be interpreted as example tax exposure.

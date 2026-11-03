@@ -1,6 +1,11 @@
 models:
   - name: fct__refunds_by_merchant_by_month__usd_total
-    description: Refunded and gross settled USD per (month, merchant).
+    description: >-
+      One row per calendar refund_month and merchant_id from platform's daily payment
+      activity. Sums refunded_amount_usd and gross_amount_usd after grouping each event's
+      business payment_date into a month. Captures and refunds are independently dated, so the
+      gross amount is not the original sales value of the refunded orders. SQL SUM omits null
+      FX conversions, including activity after the supplied rate period.
     access: protected
     config:
       contract: {enforced: true}
@@ -11,10 +16,28 @@ models:
       - {name: gross_amount_usd, data_type: "decimal(18, 4)"}
 
   - name: fct__refunds_by_day
-    description: Daily refund amount in original currency.
+    description: >-
+      One row per UTC-cast refund_date, merchant_id and original currency_code with successful
+      refunds. Publishes the event count and summed major-unit refunded_amount from the daily
+      refund intermediate. Partial refunds count separately. Zero-activity dates are absent,
+      and the report uses refund event dates rather than the dates of the original orders.
   - name: fct__refunds_by_merchant
-    description: Cumulative refunds by merchant and currency.
+    description: >-
+      One row per merchant_id and currency_code with successful, order-linked refunds. Counts
+      refund events and sums their major-unit amounts over the full available period. Original
+      currencies remain separate and partial refunds remain distinct events. The measure
+      describes refunded money rather than refunded-order count or a rate relative to sales.
   - name: fct__refunds_by_customer
-    description: Cumulative refunds by customer and currency.
+    description: >-
+      One row per customer_id, current customer country_code and original currency_code with
+      matched successful refunds. Joins the public customer import to refund events, counts
+      them and sums major-unit amounts. Unknown customer matches are removed. Country
+      describes the current customer account, not a historical order destination, and several
+      partial refunds for one order contribute several events.
   - name: fct__refund_rate_by_merchant
-    description: Share of completed orders with a refund by merchant.
+    description: >-
+      One row per merchant_id with completed orders, reporting completed_orders,
+      refunded_orders and their ratio. refunded_orders counts each completed order once if it
+      has any successful refund, regardless of refund size or event count. The denominator
+      covers all available completed orders. nullif protects division by zero, and the result
+      is an order-based rate rather than refunded monetary value divided by revenue.

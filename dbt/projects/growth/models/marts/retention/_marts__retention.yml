@@ -1,8 +1,11 @@
 models:
   - name: fct__cohort_retention_by_month
-    description: >
-      Share of each monthly acquisition cohort with a completed order N
-      calendar months after their first one (N = 0 is always 100%).
+    description: >-
+      One row per first-purchase cohort_month and observed months_since_first_order. Counts
+      distinct purchasing customers in each calendar activity month and divides by the fixed
+      first-purchase cohort_size, reporting the ratio to four decimal places. Offsets use
+      calendar-month differences, so January 31 to February 1 is month one. Cohort/offset
+      combinations with no active customer are absent rather than emitted with zero retention.
     access: protected
     config:
       contract: {enforced: true}
@@ -14,10 +17,30 @@ models:
       - {name: retention_rate, data_type: "decimal(9, 4)"}
 
   - name: fct__monthly_active_customers
-    description: Distinct purchasing customers per month.
+    description: >-
+      One row per calendar month represented in the imported platform calendar, identified by
+      month-start activity_month. Left-joins distinct purchasing-customer counts and replaces
+      missing activity with zero. Months outside the calendar's configured period are excluded
+      even if orders exist there. Active means at least one completed order, without login,
+      browsing or campaign-engagement signals.
   - name: fct__dormant_customers
-    description: Customers beyond the configured dormancy window.
+    description: >-
+      One row per customer_id with a prior completed purchase and a last_order_date more than
+      dormancy_days before end_date. Publishes the filtered historical dormancy population
+      without substituting the current date. Customers at exactly the configured threshold and
+      accounts with no completed purchase are excluded. The report measures purchase
+      inactivity rather than account engagement.
   - name: fct__repeat_customers_by_cohort
-    description: Cohort customers with purchases in multiple months.
+    description: >-
+      One row per first-purchase cohort_month with at least one customer active in multiple
+      distinct purchase months. Counts customers from the repeat-cohort relation, giving each
+      customer one contribution regardless of order frequency. Multiple orders within a single
+      month do not qualify. Cohorts with no multi-month repeat customers are absent rather
+      than displayed as zero.
   - name: fct__cohort_revenue
-    description: Cohort gross amount by activity month and currency.
+    description: >-
+      One row per cohort_month, activity_month and original currency_code with completed
+      purchases. Publishes summed gross_amount in major units from the order-derived cohort
+      activity relation. Several purchases by a customer in the month all contribute. The
+      output preserves currencies, excludes discounts/refunds and fills no inactive
+      cohort-month combinations.
