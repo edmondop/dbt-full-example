@@ -1,11 +1,35 @@
 models:
   - name: int__fulfillment__shipments_with_orders
-    description: One row per shipment with order ownership.
+    description: >-
+      One row per shipment_id with a matching valued order. Adds customer_id, merchant_id and
+      the business order_date to shipment, carrier and warehouse identifiers and UTC
+      shipped_at. The inner join excludes shipments whose order header is absent. This
+      establishes ownership for delivery metrics without filtering on order status or
+      calculating delivery outcomes.
   - name: int__fulfillment__shipment_event_summary
-    description: One row per shipment with first and delivery events.
+    description: >-
+      One row per shipment_id present in the event feed. Counts all status events, takes the
+      earliest event_at as first_event_at and the latest delivered event as delivered_at. A
+      shipment with no delivered event has a null delivered_at. Repeated delivered events
+      therefore move the selected timestamp to the latest observation rather than selecting
+      first delivery.
   - name: int__fulfillment__delivery_attempt_summary
-    description: One row per shipment with attempted and failed deliveries.
+    description: >-
+      One row per shipment_id with at least one carrier attempt. Counts all attempt records
+      and separately counts outcomes equal to failed. The result feeds delivery enrichment
+      independently of shipment status events, so an attempt can be failed even when another
+      feed records delivery. Shipments without attempts are absent here.
   - name: int__fulfillment__shipments_with_delivery
-    description: One row per shipment with delivery latency and failed attempts.
+    description: >-
+      One row per order-linked shipment_id, enriched with the event summary and failed-attempt
+      count. Left joins retain shipments without events or attempts; missing failed counts
+      become zero, while delivered_at and delivery_days remain null when no delivery timestamp
+      exists. delivery_days uses the adapter's day-difference function on UTC shipment and
+      delivery timestamps, without a business-day calendar.
   - name: int__fulfillment__delayed_shipments
-    description: One row per shipment delivered more than three days after shipping.
+    description: >-
+      One row per enriched shipment_id whose delivery_days is strictly greater than three.
+      Retains customer, merchant, warehouse and carrier ownership together with delivery
+      timestamps and failed-attempt count. Shipments delivered in three days are excluded, as
+      are undelivered shipments with a null duration. This identifies observed late deliveries
+      rather than an open overdue-shipment queue.

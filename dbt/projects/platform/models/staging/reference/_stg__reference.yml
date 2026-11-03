@@ -20,10 +20,12 @@ sources:
 
 models:
   - name: stg__reference__fx_rates
-    description: >
-      One row per published (rate_date, currency_code). Unpivots the currency
-      columns listed in `var('fx_currencies')` and drops `N/A` cells, so weekends
-      and holidays are absent rather than null.
+    description: >-
+      One row per published rate_date and currency_code from the wide ECB extract. For each
+      currency in fx_currencies, trims the source text, removes N/A cells and casts
+      units_per_eur to decimal: the value is units of that currency per one EUR.
+      Non-publication dates are absent. EUR is added downstream as the base currency before
+      cross-rates and carry-forward are calculated.
     data_tests:
       - unique:
           arguments:
@@ -33,13 +35,28 @@ models:
         data_tests: [not_null]
 
   - name: stg__reference__currencies
-    description: One row per supported currency and minor-unit exponent.
-
+    description: >-
+      One row per supported currency_code, with minor_units giving the decimal exponent used
+      to represent its smallest unit. FX coverage uses this relation as its currency universe.
+      Monetary conversion macros read the separate currency_minor_units project variable, so
+      changing this lookup alone does not change how payment amounts are converted.
   - name: stg__reference__countries
-    description: One row per market country and home currency.
-
+    description: >-
+      One row per marketplace country_code with its home currency_code from the reference
+      feed. Preserves the supplied codes without case conversion. Customer enrichment uses a
+      left join on country_code, retaining customer accounts with a null home currency if the
+      reference has no match. This mapping does not determine the currency of an individual
+      order.
   - name: stg__reference__calendar
-    description: One row per date in the example reporting window.
-
+    description: >-
+      One row per date_day in the generated reference calendar. Reads the date values without
+      deriving month or weekday attributes. FX coverage cross-joins these dates with supported
+      currencies to retain days with no usable rate. This source calendar follows the
+      generator's dataset period; the public calendar dimension builds its own spine from
+      project date variables.
   - name: stg__reference__holidays
-    description: One row per reference holiday.
+    description: >-
+      One row per named date_day in the generated holiday lookup, with the source label
+      renamed to holiday_label. The public calendar marks any matching date as a holiday. This
+      is a small example reference list without country-specific calendars; it does not drive
+      ECB publication schedules or delivery-time calculations.

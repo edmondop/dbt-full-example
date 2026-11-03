@@ -16,12 +16,37 @@ sources:
     description: Growth-owned acquisition and lifecycle events.
 models:
   - name: stg__marketing__campaigns
-    description: One acquisition campaign with its channel.
+    description: >-
+      One row per campaign_id from the marketing campaign lookup, with the acquisition channel
+      retained as supplied. Renames the source identifier without filtering or assigning
+      spend. This relation supplies labels to first-touch attribution and anchors campaign
+      reach reports so campaigns with no impressions or clicks can still appear with zero
+      counts.
   - name: stg__marketing__ad_impressions
-    description: One customer impression per campaign.
+    description: >-
+      One row per impression_id with customer_id, campaign_id and naive UTC occurred_at. Reads
+      the marketing event export and renames its identifier without sessionization,
+      deduplication or frequency caps. Campaign reach counts these rows as impressions and
+      counts distinct customer identifiers separately. Customers can therefore contribute
+      multiple impressions if the source feed contains them.
   - name: stg__marketing__ad_clicks
-    description: One customer click linked to an impression.
+    description: >-
+      One row per click_id linked to an impression_id and customer_id, with naive UTC
+      occurred_at. Retains each exported click without collapsing repeated clicks or
+      validating the impression linkage. The campaign-click intermediate inner-joins
+      impressions to determine campaign_id, so unknown impression identifiers are excluded
+      there rather than repaired in staging.
   - name: stg__marketing__email_sends
-    description: One lifecycle email delivery per customer.
+    description: >-
+      One row per email_send_id with customer_id and naive UTC sent_at from the marketing
+      export. Renames the source identifier and preserves send events without delivery, open
+      or click outcomes. The downstream email reengagement report counts completed purchases
+      within a configured date window after each send; multiple sends can each match the same
+      purchase.
   - name: stg__marketing__customer_attribution
-    description: One first-touch campaign attribution per customer.
+    description: >-
+      One row per supplied customer first-touch assignment, carrying customer_id, campaign_id
+      and naive UTC attributed_at. The generated feed supplies one assignment per customer.
+      This model imports that assignment directly; it does not derive first touch from click
+      history, resolve competing campaigns or validate timestamps. Downstream attribution
+      applies the configured purchase lookback window.

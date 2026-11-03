@@ -1,11 +1,36 @@
 models:
   - name: fct__payouts_by_day
-    description: Daily payout count and provider net minor units.
+    description: >-
+      One row per UTC-cast payout_date and merchant_id. Publishes payout_count and summed
+      provider net_minor, including payouts whose finance enrichment cannot resolve an order.
+      Amounts retain original-currency minor units and the grouping assumes a stable merchant
+      settlement currency. This is a payout-date report; it does not allocate cash back to
+      order dates.
   - name: fct__fees_by_day
-    description: Provider fees by payout day and original currency.
+    description: >-
+      One row per payout_date, merchant_id and currency_code with matched payment fees. Sums
+      fee_amount in original-currency major units, inferred upstream as captured gross less
+      converted provider net_minor. payout_date is derived by directly casting UTC paid_at.
+      The report excludes unmatched gross amounts and does not use the provider's separately
+      published fee amount from the platform contract.
   - name: fct__settlement_lag_by_merchant
-    description: Payment-to-payout delay by merchant.
+    description: >-
+      One row per merchant_id with matched payment creation and payout timestamps. Reports
+      mean lag_days rounded to two decimal places and the maximum observed lag. Each payout
+      contributes one observation, regardless of its amount. The population contains paid,
+      timestamp-resolved records, so it does not measure unpaid captures, payment-weighted
+      cash exposure or business-day settlement SLA compliance.
   - name: fct__unmatched_payouts
-    description: Payouts lacking a captured payment attempt.
+    description: >-
+      One row per imported payout_id whose finance enrichment has no order_id, retaining
+      provider payment_id, merchant_id and UTC paid_at for investigation. This can arise from
+      a missing local attempt match or an attempt with no order link. The report begins with
+      platform's already-enriched public payouts, so it cannot expose provider records
+      excluded earlier by platform's inner joins.
   - name: fct__payouts_by_merchant
-    description: Cumulative payout net minor units per merchant.
+    description: >-
+      One row per merchant_id with imported provider payouts. Counts payout records and sums
+      net_minor over all payout dates in the dataset, preserving original-currency minor
+      units. Currency is not a grouping key, so this report assumes one settlement currency
+      per merchant. Unresolved finance-side payment/order links do not remove the imported
+      provider amounts.

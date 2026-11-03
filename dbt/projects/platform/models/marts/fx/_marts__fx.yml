@@ -1,8 +1,13 @@
 models:
   - name: fct__fx_rates_by_day
-    description: >
-      Daily FX rate into the reporting currency for every calendar day and
-      currency, with ECB rates carried forward over non-publication days.
+    description: >-
+      One row per effective rate_date and original currency_code, with the reporting
+      conversion rate derived from ECB publications. Cross-rates use units of reporting
+      currency per one original-currency unit; source_rate_date identifies the publication
+      carried across non-publication dates. Rates remain null before a usable publication or
+      beyond fx_max_carry_forward_days. Version 2 exposes reporting_currency_code and
+      is_carried_forward; deprecated version 1 is USD-only and exposes rate_to_usd. Consumers
+      should pin a version when its column contract matters.
     access: public
     latest_version: 2
     config:
@@ -17,10 +22,8 @@ models:
         data_type: "decimal(18, 8)"
         description: Units of reporting currency per 1 unit of currency_code; null when the last publication is older
           than var('fx_max_carry_forward_days').
-      - {name: source_rate_date, data_type: date, description: Date of the last available ECB publication used for this
-          rate.}
-      - {name: is_carried_forward, data_type: boolean, description: True when a prior ECB publication supplies this
-          date.}
+      - {name: source_rate_date, data_type: date, description: "Most recent usable cross-rate publication on or before rate_date; retained even when the rate is null because that publication is too old."}
+      - {name: is_carried_forward, data_type: boolean, description: "Whether source_rate_date precedes rate_date. Can be true while the rate is null beyond the carry-forward limit, or null before any publication."}
     versions:
       - v: 2
       - v: 1
@@ -34,8 +37,24 @@ models:
           - {name: rate_to_usd, data_type: "decimal(18, 8)", description: USD per one original-currency unit.}
 
   - name: dim__currencies
-    description: Supported currency and minor-unit exponent.
+    description: >-
+      One row per supported currency_code with its minor-unit exponent from the reference
+      feed. Provides a reporting lookup for interpreting integer monetary fields. The exponent
+      describes the feed; conversion macros are configured independently through
+      currency_minor_units. A reference edit therefore needs a matching variable change before
+      it changes payment or fee conversions.
   - name: fct__fx_coverage
-    description: Number of supported currencies with a usable rate each day.
+    description: >-
+      One row per reference calendar date, with supported, usable, published and missing
+      currency counts. Aggregates the currency-day grid and joins publication/missing-rate
+      counts, substituting zero where those summaries have no row. published_currency_count
+      counts raw quoted currencies and excludes synthesized EUR; covered_currency_count
+      includes usable carried rates, so publication and coverage counts have different
+      denominators.
   - name: fct__latest_fx_rates
-    description: Latest usable rate to reporting currency per source currency.
+    description: >-
+      One row per currency_code with its latest usable rate_date and rate_to_reporting inside
+      the configured dataset window. Publishes the daily-rate selection from the FX
+      intermediate for reference reporting. The date is an effective rate date and may use a
+      carried publication; this relation does not expose source_rate_date and should not be
+      used as a freshness or live-pricing feed.

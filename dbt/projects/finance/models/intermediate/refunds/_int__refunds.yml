@@ -1,11 +1,35 @@
 models:
   - name: int__refunds__refunds_with_orders
-    description: Refund grain with customer and original currency.
+    description: >-
+      One row per imported successful refund_id with a matching platform order. Adds
+      customer_id and uses the order's currency_code alongside refund amount and UTC
+      refunded_at. The inner join removes unknown orders. It assumes the refund amount uses
+      that order currency; the imported refund currency is not independently compared to the
+      order currency.
   - name: int__refunds__refunds_by_day
-    description: Daily refunds by merchant and currency.
+    description: >-
+      One row per refund_date, merchant_id and currency_code with successful refunds. Derives
+      refund_date by directly casting UTC refunded_at, counts refund events and sums
+      major-unit amounts in the original currency. Partial refunds count as separate events.
+      Dates without refund activity are absent, and the date derivation does not invoke the
+      producer's business_timezone macro.
   - name: int__refunds__refunds_by_order
-    description: Cumulative refunded amount per order.
+    description: >-
+      One row per order_id with at least one imported successful refund. Counts refund events
+      and sums their major-unit amounts, preserving cumulative partial refunds against the
+      order. Currency is inherited from the order and omitted from the projection. The
+      merchant refund-rate calculation uses row presence here to count an order once
+      regardless of its refund count.
   - name: int__refunds__refund_rate_by_merchant
-    description: Completed and refunded orders per merchant.
+    description: >-
+      One row per merchant_id with completed orders. Left-joins order-level refund totals to
+      completed order headers and counts both completed orders and those with any refund
+      record. Multiple refunds do not multiply the denominator because the input is aggregated
+      by order. Any successful refund record marks an order as refunded; the final rate is
+      calculated in the reporting mart.
   - name: int__refunds__credit_notes_by_invoice
-    description: Credit-note amount per invoice in minor units.
+    description: >-
+      One row per invoice_id with at least one billing credit note. Counts credit-note records
+      and sums credited amount_minor in the invoice's original currency. No payment or
+      refund-status filter is applied to the billing feed. Invoice balance left-joins this
+      summary and subtracts credited_minor, assigning zero when no credit notes exist.

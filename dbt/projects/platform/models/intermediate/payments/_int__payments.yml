@@ -1,9 +1,13 @@
 models:
   - name: int__payments__net_by_day
-    description: >
-      Gross, refunded and net settled amounts per (payment_date, merchant,
-      currency), in the original currency. Incremental (merge) on Trino,
-      rebuilt as a table on DuckDB; see materialization_for.
+    description: >-
+      One row per payment_date, merchant_id and currency_code, combining successful captures
+      and refunds. Assigns each event to its business_timezone date and computes gross,
+      refunded and net amounts in original-currency major units; refunds affect their refund
+      date rather than restating the purchase date. On Trino, merge updates the composite key.
+      Incremental runs identify dates touched by loads newer than the target watermark minus
+      incremental_lookback_days, then recompute all events for those dates. An empty target
+      uses a 1900 watermark; DuckDB builds a table instead of merging.
     data_tests:
       - unique:
           arguments:
@@ -13,10 +17,28 @@ models:
         description: Newest PSP load among the day's events; drives the incremental lookback.
 
   - name: int__payments__succeeded_attempts
-    description: One row per successful payment attempt.
+    description: >-
+      One row per provider payment_id whose payment_status is succeeded. Projects the
+      normalized attempt with order linkage, original-currency amounts, UTC event time and
+      export load time. Fee enrichment uses this relation to restrict fee calculations to
+      captures. Multiple successful attempts for one order remain separate records.
   - name: int__payments__failed_attempts
-    description: One row per failed payment attempt.
+    description: >-
+      One row per provider payment_id whose payment_status is failed. Retains the attempted
+      amount, original currency, order link and UTC creation/load timestamps for operational
+      reporting. A failed attempt is not captured cash and does not enter the daily gross
+      payment balance. Retries remain separate attempts rather than being collapsed by order.
   - name: int__payments__refunds_with_orders
-    description: One row per successful refund with its order and merchant.
+    description: >-
+      One row per successful refund_id with matching payment and order records. Resolves the
+      refund's order and merchant through payment_id, retains its own currency and major-unit
+      amount, and preserves UTC refunded_at and loaded_at. Partial refunds remain individual
+      events; unmatched payment/order links and non-succeeded refunds are excluded by the
+      joins and status filter.
   - name: int__payments__fees_by_payment
-    description: One row per captured payment with provider fee in major units.
+    description: >-
+      One row per successful payment_id with a matching provider fee record. Inner-joins
+      captured attempts to fee_minor, then derives fee_amount in original-currency major units
+      using the payment's currency and currency_minor_units. Captures without fee records are
+      excluded. The result retains both amount representations for payout enrichment and
+      unit-sensitive fee calculations.

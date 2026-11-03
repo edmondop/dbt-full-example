@@ -1,11 +1,35 @@
 models:
   - name: int__lifecycle__order_counts
-    description: Order counts per customer across all statuses.
+    description: >-
+      One row per customer_id found in the imported order headers. Counts all orders as
+      total_orders and counts completed statuses separately, retaining zero completed_orders
+      for customers with only unsuccessful or pending order activity. Customers without orders
+      are absent here. The segment model starts from all customer accounts and zero-fills
+      their missing count.
   - name: int__lifecycle__spend_by_currency
-    description: Completed gross spend by customer and original currency.
+    description: >-
+      One row per customer_id and original currency_code with completed orders. Sums gross
+      major-unit order_amount over all available purchase dates, with no promotional or refund
+      deductions. A customer can have several currency rows. This relation supports
+      currency-specific value reports; the amounts need an explicit FX policy before combining
+      currencies into one customer value.
   - name: int__lifecycle__delivery_experience
-    description: Shipment count and delivery experience per customer.
+    description: >-
+      One row per customer_id with imported shipments. Counts shipments, averages non-null
+      delivery_days to two decimal places and counts durations strictly greater than three as
+      delayed_shipments. Undelivered shipments still contribute to shipment count but not the
+      average or delayed count. The measures describe the shipped-order population rather than
+      every completed order.
   - name: int__lifecycle__segments
-    description: Customer segment based on completed order count.
+    description: >-
+      One row per imported customer_id, including accounts without orders. Left-joins
+      completed-order counts, replacing missing counts with zero, and assigns prospect at
+      zero, new at one, repeat at two through nine and loyal at ten or more. Segments use the
+      full input period and purchase frequency only; they do not incorporate recency, spend or
+      delivery experience.
   - name: int__lifecycle__repeat_purchase_days
-    description: Days from first to second distinct purchase day.
+    description: >-
+      One row per customer_id with a second distinct completed-purchase date. Computes
+      days_to_second_order from the first and next purchase dates supplied by the retention
+      model using the adapter's day-difference function. Customers without a later purchase
+      day are absent. Multiple orders on the first date do not count as a repeat interval.

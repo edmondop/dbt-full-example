@@ -6,20 +6,67 @@
 #   treated as protected to platform and rejected under dbt-loom.
 models:
   - name: stg__platform__orders
-    description: One order-grain import of platform's public order contract.
+    description: >-
+      One row per order_id, imported from platform's public fct__orders contract through a
+      cross-project ref. Projects customer, merchant, business order date, status and gross
+      major-unit amount in the recorded currency. Completed, cancelled and pending orders
+      remain present; consumers apply their own status filters. This explicit local projection
+      gives growth a stable input node for downstream SQL and unit-test fixtures; it performs
+      no additional filtering or aggregation.
     access: private
 
   - name: stg__platform__customers
-    description: One public customer dimension row per customer.
+    description: >-
+      One row per customer_id, imported from platform's public dim__customers contract through
+      a cross-project ref. Projects account country and business signup date. The import omits
+      the enriched purchase counts and home currency available in the producer contract. This
+      explicit local projection gives growth a stable input node for downstream SQL and
+      unit-test fixtures; it performs no additional filtering or aggregation.
   - name: stg__platform__merchants
-    description: One public merchant dimension row per merchant.
+    description: >-
+      One row per merchant_id, imported from platform's public dim__merchants contract through
+      a cross-project ref. Projects current merchant country, settlement currency, display
+      name and IANA time zone. Attributes have no historical effective dates; they describe
+      the current merchant export. This explicit local projection gives growth a stable input
+      node for downstream SQL and unit-test fixtures; it performs no additional filtering or
+      aggregation.
   - name: stg__platform__calendar
-    description: One public calendar dimension row per date.
+    description: >-
+      One row per date_day, imported from platform's public dim__calendar contract through a
+      cross-project ref. Projects reporting month, calendar year, ISO weekday and weekend
+      flag. The import omits is_holiday; growth uses its month coverage to retain months with
+      zero purchasing activity. This explicit local projection gives growth a stable input
+      node for downstream SQL and unit-test fixtures; it performs no additional filtering or
+      aggregation.
   - name: stg__platform__order_lines
-    description: One public order-line fact row per item.
+    description: >-
+      One row per order_item_id, imported from platform's public fct__order_lines contract
+      through a cross-project ref. Projects SKU, category, quantity and original-currency
+      minor amount with order linkage. Amounts precede promotions and refunds, and the
+      producer has required catalog and header matches. This explicit local projection gives
+      growth a stable input node for downstream SQL and unit-test fixtures; it performs no
+      additional filtering or aggregation.
   - name: stg__platform__products
-    description: One public product dimension row per SKU.
+    description: >-
+      One row per SKU, imported from platform's public dim__products contract through a
+      cross-project ref. Projects catalog category identifier and label. The producer
+      preserves unknown category labels as null and does not attach prices or currency to a
+      global SKU. This explicit local projection gives growth a stable input node for
+      downstream SQL and unit-test fixtures; it performs no additional filtering or
+      aggregation.
   - name: stg__platform__shipments
-    description: One public shipment fact row per shipment.
+    description: >-
+      One row per shipment_id, imported from platform's public fct__shipments contract through
+      a cross-project ref. Projects order/customer/merchant ownership, UTC shipment and
+      delivery timestamps and delivery_days. The import omits tracking_code; shipments without
+      a delivery event retain a null duration. This explicit local projection gives growth a
+      stable input node for downstream SQL and unit-test fixtures; it performs no additional
+      filtering or aggregation.
   - name: stg__platform__payment_attempts
-    description: One public payment fact row per provider attempt.
+    description: >-
+      One row per payment_id, imported from platform's public fct__payment_attempts contract
+      through a cross-project ref. Projects attempt status, original-currency major-unit
+      amount and UTC creation time with order/merchant links. Successful captures and failed
+      retries remain distinct attempt records. This explicit local projection gives growth a
+      stable input node for downstream SQL and unit-test fixtures; it performs no additional
+      filtering or aggregation.

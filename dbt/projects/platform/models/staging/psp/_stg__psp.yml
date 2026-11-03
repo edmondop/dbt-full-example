@@ -29,7 +29,12 @@ sources:
 
 models:
   - name: stg__psp__payments
-    description: One row per payment attempt, including failed attempts.
+    description: >-
+      One row per provider payment_id, including failed attempts and successful captures.
+      Casts the provider's metadata_order_id to bigint, normalizes currency codes, and exposes
+      both integer amount_minor and decimal amount in major units using currency_minor_units.
+      Converts epoch seconds to a naive UTC created_at and retains loaded_at separately so
+      incremental processing can detect exports arriving after the event date.
     columns:
       - name: payment_id
         data_tests: [unique, not_null]
@@ -42,7 +47,12 @@ models:
                 values: [succeeded, failed]
 
   - name: stg__psp__refunds
-    description: One row per refund. Partial refunds carry less than the payment amount.
+    description: >-
+      One row per provider refund_id linked to payment_id, retaining partial refunds, reasons
+      and provider status. Normalizes currency codes, preserves the integer minor amount and
+      derives major-unit amount using currency_minor_units. refunded_at is converted from
+      epoch seconds to UTC; loaded_at is the export arrival time. Successful-refund filtering
+      occurs in the downstream payment models.
     columns:
       - name: refund_id
         data_tests: [unique, not_null]
@@ -54,10 +64,27 @@ models:
                 field: payment_id
 
   - name: stg__psp__fees
-    description: One provider fee per captured payment, in minor units.
+    description: >-
+      One row per captured payment_id with the provider's fee_minor in that payment's original
+      currency. Reads the fee export without currency conversion or aggregation; currency is
+      obtained by joining the payment attempt downstream. The generated feed has one fee per
+      successful payment, so downstream joins assume payment_id is unique here.
   - name: stg__psp__disputes
-    description: One row per payment dispute.
+    description: >-
+      One row per dispute_id from the provider export, with payment_id, amount_minor and the
+      current dispute_status. Amounts remain minor units of the associated payment's currency.
+      Open and resolved disputes are both retained; this relation does not subtract disputed
+      amounts from payments, payouts or financial contribution.
   - name: stg__psp__balance_transactions
-    description: One provider balance transaction per captured payment.
+    description: >-
+      One row per balance_transaction_id linked to a captured payment_id. net_minor is the
+      provider's net balance amount after its fee, in original-currency minor units;
+      available_at is the UTC availability timestamp. Payout reporting joins this export on
+      payment_id, relying on the generated feed's one balance transaction per captured
+      payment.
   - name: stg__psp__payouts
-    description: One provider payout linked to a payment.
+    description: >-
+      One row per payout_id identifying the merchant, linked payment and UTC paid_at
+      timestamp. This source contains the payout linkage but no amount; downstream models join
+      balance transactions and fees to value it. The example generates one payout per
+      successful payment rather than modeling a provider batch that combines many payments.

@@ -1,6 +1,11 @@
 models:
   - name: dim__calendar
-    description: One row per calendar day in [var('start_date'), var('end_date')].
+    description: >-
+      One row per date_day between start_date and end_date, inclusive. Generates the date
+      spine and derives month_start, calendar year, ISO weekday and weekend status; a left
+      join to the reference holiday list supplies is_holiday. The holiday flag is global to
+      this example and is not country-specific. This public dimension supplies month coverage
+      to growth reporting.
     access: public
     config:
       contract: {enforced: true}
@@ -11,24 +16,34 @@ models:
       - {name: calendar_year, data_type: integer, description: Four-digit calendar year.}
       - {name: iso_day_of_week, data_type: integer, description: Monday = 1 ... Sunday = 7}
       - {name: is_weekend, data_type: boolean, description: True for Saturday or Sunday.}
-      - {name: is_holiday, data_type: boolean, description: True for a named reference holiday.}
+      - {name: is_holiday, data_type: boolean, description: "True when the date appears in the example reference holiday list, which has no country-specific calendar."}
 
   - name: dim__customers
-    description: One row per customer. No PII.
+    description: >-
+      One current row per customer_id, including accounts without purchases. Combines
+      country/home-currency enrichment with first completed-order date and completed-order
+      count; absent counts become zero and absent first purchases remain null. signup_date
+      uses business_timezone. This public contract excludes email and exposes current account
+      attributes rather than a history of customer changes or a snapshot as of a past date.
     access: public
     config:
       contract: {enforced: true}
     columns:
       - {name: customer_id, data_type: bigint, constraints: [type: not_null], data_tests: [unique], description:
           Marketplace customer identifier.}
-      - {name: country_code, data_type: varchar, description: ISO country code of the customer or merchant.}
+      - {name: country_code, data_type: varchar, description: "Country code from the current customer account export; it is not an order delivery destination."}
       - {name: signup_date, data_type: date, description: "Signup day in var('business_timezone')."}
-      - {name: home_currency_code, data_type: varchar, description: ISO currency of the customer's home market.}
-      - {name: first_order_date, data_type: date, description: First completed-order business date or null.}
-      - {name: completed_order_count, data_type: bigint, description: Number of completed orders.}
+      - {name: home_currency_code, data_type: varchar, description: "Currency mapped from the customer account country; null when the country reference has no match. Orders retain their own transaction currencies."}
+      - {name: first_order_date, data_type: date, description: "Earliest completed-order date in business_timezone; null for accounts without a completed order."}
+      - {name: completed_order_count, data_type: bigint, description: "Completed-order records across the full available dataset; zero for customers with no completed orders."}
 
   - name: dim__merchants
-    description: One row per merchant.
+    description: >-
+      One current row per merchant_id with display name, country, settlement currency and IANA
+      time zone. Publishes selected staged merchant attributes under an enforced public
+      contract. Finance uses the country to group revenue and choose the example's tax rate.
+      The relation has no effective dates, so these attributes describe the current export for
+      all associated orders.
     access: public
     config:
       contract: {enforced: true}
@@ -36,12 +51,17 @@ models:
       - {name: merchant_id, data_type: bigint, constraints: [type: not_null], data_tests: [unique], description:
           Marketplace merchant identifier.}
       - {name: merchant_name, data_type: varchar, description: Merchant display name.}
-      - {name: country_code, data_type: varchar, description: ISO country code of the customer or merchant.}
-      - {name: currency_code, data_type: varchar, description: Settlement currency.}
-      - {name: timezone, data_type: varchar, description: IANA time zone of the merchant.}
+      - {name: country_code, data_type: varchar, description: "Country code of the current merchant account, used by finance for country reporting and the example tax lookup."}
+      - {name: currency_code, data_type: varchar, description: "Original settlement currency configured for the merchant; historical changes are not versioned."}
+      - {name: timezone, data_type: varchar, description: "Merchant IANA time zone retained as an attribute. Order and payment business dates use the project business_timezone variable."}
 
   - name: fct__orders
-    description: One row per order, amount in the order currency (major units).
+    description: >-
+      One row per order_id across completed, cancelled and pending statuses. Publishes gross
+      order_amount in original-currency major units, the business-time-zone order_date and
+      customer/merchant identifiers. Orders without items carry zero amount. Discounts,
+      refunds and payment outcomes are excluded from the valuation, so consumers select the
+      relevant order status before calculating purchase or revenue metrics.
     access: public
     config:
       contract: {enforced: true}
@@ -62,12 +82,16 @@ models:
         description: Marketplace merchant identifier.
       - {name: order_date, data_type: date, description: "Order day in var('business_timezone')."}
       - {name: order_status, data_type: varchar, description: Order lifecycle state.}
-      - {name: currency_code, data_type: varchar, description: ISO currency code of the original amount or rate.}
-      - {name: order_amount, data_type: "decimal(18, 4)", description: 'Gross order amount in its original currency, in major
-          units.'}
+      - {name: currency_code, data_type: varchar, description: "Original order currency used to interpret order_amount."}
+      - {name: order_amount, data_type: "decimal(18, 4)", description: "Gross line-item total converted to major units of currency_code; zero without items, before promotional deductions, refunds or provider fees."}
 
   - name: dim__products
-    description: Product catalog without customer data.
+    description: >-
+      One row per catalog SKU, enriched with a category display name. Left-joins the category
+      lookup so products without a category match retain a null label. The public contract
+      contains catalog identity and classification; prices and currency are taken from order
+      lines and headers. Growth joins this dimension to order lines for category
+      purchase-volume reporting.
     access: public
     config:
       contract:
@@ -86,7 +110,12 @@ models:
         data_type: varchar
         description: Product category display name.
   - name: fct__order_lines
-    description: Order-line grain for product and basket analysis.
+    description: >-
+      One row per matched order_item_id, with order_id, SKU, product category, quantity and
+      original currency. Publishes line_amount_minor as quantity times unit_price_minor,
+      retaining integer minor units. The upstream inner joins require both catalog and
+      order-header matches. Growth uses this public contract for category volume; line amounts
+      precede promotional deductions and refunds.
     access: public
     config:
       contract:
@@ -115,13 +144,26 @@ models:
         description: Order-line amount in original-currency minor units.
       - name: currency_code
         data_type: varchar
-        description: ISO currency code of the original amount or rate.
+        description: "Currency from the parent order header, used to interpret line_amount_minor."
 
   - name: fct__completed_orders_net
-    description: Completed order grain with applied promotion and net amount in the order currency.
-
+    description: >-
+      One row per completed order_id showing gross and promotion-adjusted order value in the
+      original currency. Publishes the recorded discount_amount_minor, selected promotion
+      percentage and net_order_amount from the discount intermediate. The percentage is
+      descriptive and can be null; the monetary subtraction uses the summed recorded
+      discounts. Payment capture and refund activity do not change this order-based measure.
   - name: fct__customer_spend_by_currency
-    description: Gross completed-order spend per customer and original currency.
-
+    description: >-
+      One row per customer_id and currency_code with completed purchases. Publishes
+      gross_spend as the sum of major-unit order amounts over the available dataset,
+      preserving a separate row for each transaction currency. This is gross purchase activity
+      before discounts and refunds. Cross-currency customer value requires an explicit
+      conversion policy rather than summing these rows directly.
   - name: fct__customer_merchant_affinity
-    description: Completed order count per customer and merchant.
+    description: >-
+      One row per customer_id and merchant_id with completed purchases. Exposes the count of
+      completed orders for the pair over the full input period. Use it to compare observed
+      purchasing relationships or derive merchant rankings within a customer. The model does
+      not calculate recency, normalize to a share or include customer-merchant pairs with zero
+      purchases.

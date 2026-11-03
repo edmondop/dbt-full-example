@@ -1,18 +1,48 @@
 models:
   - name: int__revenue__orders_settled
-    description: Completed orders with their USD value at the order day's FX rate.
+    description: >-
+      One row per platform order_id with status completed, valued in USD at the order's
+      business-date FX rate. Left-joins the pinned v1 rate by order_date and currency_code,
+      retaining a null order_amount_usd when no usable rate exists. Despite its name, the
+      model does not join payments or verify payout settlement. The amount is gross order
+      value before promotional deductions and refunds.
     access: private
     columns:
       - name: order_id
         data_tests: [unique, not_null]
 
   - name: int__revenue__invoices_with_orders
-    description: Invoice grain with order ownership.
+    description: >-
+      One row per invoice_id with a matching platform order. Inner-joins the billing invoice
+      to order_id to attach customer, merchant, original currency and gross major-unit order
+      amount, retaining UTC issued_at. Invoices without an order match are removed. The model
+      does not compare billed lines against order value or infer recognition from payment
+      activity.
   - name: int__revenue__invoice_lines_by_invoice
-    description: Line count and minor-unit total per invoice.
+    description: >-
+      One row per invoice_id with at least one billed line. Counts line records and sums
+      amount_minor to invoiced_amount_minor without currency conversion. The parent
+      invoice/order determines the currency. Invoices with no lines are absent here; invoice
+      balance retains them through a left join and uses zero for the missing line total.
   - name: int__revenue__taxed_orders
-    description: Completed order with estimated tax in original currency.
+    description: >-
+      One row per completed order_id with matching merchant and country tax-rate records. Uses
+      the merchant's country to select rate_percent and estimates tax as gross major-unit
+      order_amount multiplied by rate_percent divided by 100. Amounts remain in the order
+      currency. Missing lookups remove the order; discounts, tax-inclusive pricing and
+      tax-rule history are not modeled.
   - name: int__revenue__invoice_balance
-    description: Invoice-grain billed, credited and adjusted amounts in original minor units.
+    description: >-
+      One row per matched invoice_id, with order, merchant and original currency. Left-joins
+      line totals, credit-note totals and summed manual adjustments, treating an absent
+      component as zero. net_billed_minor equals invoiced_minor minus credited_minor plus
+      adjustment_minor. All amounts remain original-currency minor units; the calculation
+      reconciles billing components without proving payment collection or comparing net billed
+      value to gross order_amount.
   - name: int__revenue__monthly_by_merchant
-    description: Monthly merchant revenue in USD.
+    description: >-
+      One row per merchant_id and calendar revenue_month with completed orders. Truncates the
+      business order_date to month start, counts orders and sums order_amount_usd from the USD
+      valuation relation. Monetary output is decimal USD. SQL SUM skips null FX conversions
+      while the order count still includes those orders, so coverage checks are needed before
+      interpreting totals as complete.

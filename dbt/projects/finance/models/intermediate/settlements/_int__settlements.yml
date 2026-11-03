@@ -1,11 +1,37 @@
 models:
   - name: int__settlements__payouts_with_attempts
-    description: Payout grain with captured attempt and currency.
+    description: >-
+      One row per imported payout_id, retained even when its payment or order cannot be
+      resolved. Left-joins provider payment attempts and orders to attach gross major-unit
+      amount, payment creation time, order_id and currency_code alongside payout net_minor. A
+      missing attempt leaves gross amount and order_id null; a missing order match leaves
+      currency null while the attempt's order_id remains. This is the common input for
+      inferred fees, payout summaries and unmatched-payout investigation.
   - name: int__settlements__payouts_by_day
-    description: Provider payout total by merchant and day.
+    description: >-
+      One row per payout_date and merchant_id with payout records. Directly casts UTC paid_at
+      to a date, counts payouts and sums provider net_minor. The sum remains in minor units
+      and assumes each merchant's payouts share its settlement currency; currency is not a
+      grouping key. Payouts with unresolved order or attempt links still contribute their
+      provider net amount.
   - name: int__settlements__fees_by_payment
-    description: Provider fee per matched payment in original currency.
+    description: >-
+      One row per linked payout/payment record whose gross_amount is present. Converts
+      provider net_minor to original-currency major units using currency_minor_units, then
+      subtracts that net from gross_amount to infer fee_amount. payout_date is a direct date
+      cast of UTC paid_at. This derives a gross-minus-net difference rather than importing the
+      provider's separately reported fee field.
   - name: int__settlements__settlement_lag
-    description: Elapsed days from payment to payout.
+    description: >-
+      One row per payout_id whose linked payment has a creation timestamp. Computes lag_days
+      with the adapter's day-difference function between UTC created_at and paid_at. Payouts
+      lacking that timestamp are excluded. The measure describes observed payment-to-payout
+      delay for matched records, with no business-day calendar, target threshold or treatment
+      of outstanding unpaid captures.
   - name: int__settlements__unmatched_payouts
-    description: Payouts without a matching captured attempt.
+    description: >-
+      One row per payout_id whose enriched order_id is null. Retains provider payment_id,
+      merchant_id and UTC paid_at for investigation. A row can indicate either a missing
+      payment-attempt match or an attempt with no order identifier; the model does not
+      distinguish those causes. It reports issues visible after platform's own payout
+      enrichment has already required provider-side balance, payment and fee matches.

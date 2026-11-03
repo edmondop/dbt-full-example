@@ -1,15 +1,50 @@
 models:
   - name: fct__segment_counts
-    description: Customer count by purchase-frequency segment.
+    description: >-
+      One row per lifecycle_segment represented in the customer population. Counts account
+      rows from the customer segmentation relation, so prospects without completed purchases
+      remain part of the distribution. Segments absent from the data have no row. The
+      classification follows completed-order frequency over the entire dataset rather than a
+      recent-activity or spend threshold.
   - name: fct__first_to_second_purchase
-    description: Elapsed days between first and second distinct purchase days.
+    description: >-
+      One row per customer_id who purchased on at least two distinct completed-order dates.
+      Publishes days_to_second_order between the first date and the earliest later purchase
+      date. Customers with several orders confined to their first purchase day are absent. The
+      measure is date-based repeat latency and does not rank payment attempts or exact order
+      timestamps.
   - name: fct__order_count_distribution
-    description: Customer count by completed-order frequency.
+    description: >-
+      One row per distinct completed_orders count among imported customer accounts. Counts
+      customers at each frequency, including zero after missing order summaries are filled in
+      the segment model. The count covers the full available dataset and counts completed
+      statuses only. Use this distribution to inspect repeat purchasing without interpreting
+      it as an order-date time series.
   - name: fct__customer_segments
-    description: Current purchase-frequency segment per customer.
+    description: >-
+      One row per imported customer_id with completed_orders and a purchase-frequency
+      lifecycle_segment. Includes prospects with zero completed purchases, new customers at
+      one, repeat customers at two through nine and loyal customers at ten or more. The
+      classification uses all available orders and reflects current dataset totals rather than
+      a dated customer-state history.
   - name: fct__delivery_experience_by_segment
-    description: Mean delivery time by customer segment.
+    description: >-
+      One row per lifecycle_segment with customer delivery summaries. Inner-joins current
+      segments to customers with shipments, then averages each customer's
+      average_delivery_days to two decimal places. Each non-null customer average has equal
+      weight, regardless of shipment count. customers counts all matched shipment-summary
+      rows, including those whose average is null because no delivery is recorded.
   - name: fct__customer_payment_failures
-    description: Failed provider payment attempts per customer.
+    description: >-
+      One row per customer_id with failed provider payment attempts linked to an order. Joins
+      attempts to the order contract for customer ownership and counts failed statuses without
+      filtering the order lifecycle state. Several retries for one order each add to
+      failed_payment_attempts. Customers without recorded failures are absent rather than
+      included with zero.
   - name: fct__email_reengagement
-    description: Completed orders within the configured number of days after each lifecycle email.
+    description: >-
+      One row per email_send_id and customer_id, including sends without a matching purchase.
+      Left-joins completed orders whose business order_date is zero through
+      email_response_days after the UTC-cast sent_at date, inclusive, and counts matched order
+      identifiers. The same order can match multiple overlapping send windows. This is a
+      temporal response count without email-open evidence or causal attribution.

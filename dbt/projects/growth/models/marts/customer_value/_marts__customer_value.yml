@@ -1,13 +1,43 @@
 models:
   - name: fct__customer_spend
-    description: Customer gross spend in original currency.
+    description: >-
+      One row per customer_id and currency_code with completed purchases, exposing cumulative
+      gross_spend in original-currency major units. Retains a separate row for every currency
+      used by a customer. The measure precedes discounts and refunds and has no historical
+      as-of cutoff beyond the dataset. It is a purchase-value report rather than net customer
+      revenue.
   - name: fct__cohort_value
-    description: Lifetime gross spend by acquisition cohort and currency.
+    description: >-
+      One row per first-purchase cohort_month and original currency_code with customer
+      spending. Joins customer currency-level spend to the first completed-order cohort and
+      sums gross major-unit spend across all activity months. This is a total for the cohort,
+      not a per-customer average or a fixed-age lifetime-value comparison. Different cohorts
+      have different observation lengths.
   - name: fct__high_value_customers
-    description: Customers with at least 1000 major units spent in one currency.
+    description: >-
+      One row per customer_id and currency_code whose cumulative completed-order gross_spend
+      is at least 1000 major units in that currency. Applies the same numeric threshold
+      independently to USD, EUR, GBP and JPY, without FX normalization. A customer can appear
+      in several currencies, and the result should not be treated as a globally comparable
+      customer-value ranking.
   - name: fct__order_frequency_by_country
-    description: Average completed order count by customer country.
+    description: >-
+      One row per current customer country_code. Starts from all imported customer accounts,
+      counts them, and averages completed-order counts from customers with an order-summary
+      row. SQL AVG ignores the null counts of accounts with no orders, while customers with
+      only pending/cancelled orders contribute zero. The displayed customer count and average
+      therefore use different populations.
   - name: fct__delivery_by_customer
-    description: Shipment and delay experience by customer.
+    description: >-
+      One row per customer_id with imported shipments, publishing shipment count, average
+      non-null delivery_days and the count delivered in more than three days. Undelivered
+      shipments contribute to the total shipment count but not the average or delay count.
+      Customers without shipments are absent, so this report describes fulfillment experience
+      among shipped orders.
   - name: fct__category_purchase_volume
-    description: Completed-order units and original-currency minor amount by product category and currency.
+    description: >-
+      One row per product category_id, category_name and original order currency_code for
+      completed orders. Inner-joins imported order lines, current catalog products and order
+      headers, then sums quantities and gross line_amount_minor. Unknown catalog/header
+      matches are excluded. Monetary totals stay in original-currency minor units before
+      promotions and refunds; category labels are current catalog attributes.
