@@ -1,0 +1,14 @@
+unit_tests:
+  - name: int__reference__fx_cross_rates__divides_reporting_by_quoted
+    model: int__reference__fx_cross_rates
+    given:
+      - input: ref('int__reference__fx_units_with_reporting_units')
+        rows:
+          - {rate_date: 2025-01-03, currency_code: GBP, units_per_eur: 0.8, reporting_units_per_eur: 1.0}
+          - {rate_date: 2025-01-03, currency_code: EUR, units_per_eur: 1.0, reporting_units_per_eur: 1.0}
+          - {rate_date: 2025-01-03, currency_code: USD, units_per_eur: 1.0, reporting_units_per_eur: 1.0}
+    expect:
+      rows:
+        - {rate_date: 2025-01-03, currency_code: GBP, rate_to_reporting: 1.25}
+        - {rate_date: 2025-01-03, currency_code: EUR, rate_to_reporting: 1}
+        - {rate_date: 2025-01-03, currency_code: USD, rate_to_reporting: 1}

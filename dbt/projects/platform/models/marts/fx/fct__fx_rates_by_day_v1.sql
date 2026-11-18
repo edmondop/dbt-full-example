@@ -6,4 +6,4 @@ select
     cast(currency_code as varchar) as currency_code,
     rate_to_reporting as rate_to_usd,
     source_rate_date
-from {{ ref('int__fx__rates_by_day') }}
+from {{ ref('int__fx_rates__rates_by_day') }}

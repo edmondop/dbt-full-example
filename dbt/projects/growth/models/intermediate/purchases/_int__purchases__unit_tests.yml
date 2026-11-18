@@ -1,0 +1,16 @@
+unit_tests:
+  - name: int__purchases__completed_orders__drops_other_statuses_and_truncates_to_calendar_month
+    description: >
+      31 Jan and 1 Feb are one day apart but fall in different calendar months;
+      cancelled orders never count as activity.
+    model: int__purchases__completed_orders
+    given:
+      - input: ref('stg__platform__orders')
+        rows:
+          - {order_id: 1, customer_id: 1, order_date: 2025-01-31, order_status: completed}
+          - {order_id: 2, customer_id: 1, order_date: 2025-02-01, order_status: completed}
+          - {order_id: 3, customer_id: 2, order_date: 2025-02-10, order_status: cancelled}
+    expect:
+      rows:
+        - {order_id: 1, customer_id: 1, order_date: 2025-01-31, order_month: 2025-01-01}
+        - {order_id: 2, customer_id: 1, order_date: 2025-02-01, order_month: 2025-02-01}

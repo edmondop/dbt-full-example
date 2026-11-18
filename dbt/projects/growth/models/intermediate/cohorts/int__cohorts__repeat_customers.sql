@@ -1,7 +1,6 @@
 select
     customer_id,
     cohort_month,
-    count(distinct activity_month) as active_months
-from {{ ref('int__cohorts__order_months') }}
-group by customer_id, cohort_month
-having count(distinct activity_month) > 1
+    active_months
+from {{ ref('int__cohorts__customer_active_months') }}
+where active_months > 1

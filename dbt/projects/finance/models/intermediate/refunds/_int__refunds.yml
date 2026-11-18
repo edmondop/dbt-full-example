@@ -1,11 +1,19 @@
 models:
   - name: int__refunds__refunds_with_orders
-    description: Refund grain with customer and original currency.
+    description: Grain refund_id. Refund with customer and original currency.
+  - name: int__refunds__dated_refunds
+    description: Grain refund_id. Refund with its UTC refund date.
   - name: int__refunds__refunds_by_day
-    description: Daily refunds by merchant and currency.
+    description: Grain (refund_date, merchant_id, currency_code). Refund count and amount in original currency.
   - name: int__refunds__refunds_by_order
-    description: Cumulative refunded amount per order.
+    description: Grain order_id. Refund count and cumulative refunded amount.
+  - name: int__refunds__completed_orders_with_refunds
+    description: Grain order_id. Completed orders; refunded_order_id is null when the order has no refund.
   - name: int__refunds__refund_rate_by_merchant
-    description: Completed and refunded orders per merchant.
+    description: Grain merchant_id. Completed orders and how many of them have a refund.
+  - name: int__refunds__refunds_with_customers
+    description: Grain refund_id. Refund with the customer's country.
+  - name: int__refunds__payment_days_with_month
+    description: Grain (payment_date, merchant_id, currency_code). Settled USD amounts with their calendar month.
   - name: int__refunds__credit_notes_by_invoice
-    description: Credit-note amount per invoice in minor units.
+    description: Grain invoice_id. Credit-note count and amount in minor units.

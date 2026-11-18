@@ -1,0 +1,28 @@
+models:
+  - name: int__reference__fx_quoted_units_per_eur
+    description: >
+      Grain: (ECB export date, currency in var('fx_currencies')). Unpivots the
+      wide export; units_per_eur is null where the export has `N/A`.
+  - name: int__reference__fx_published_units_per_eur
+    description: Grain (rate_date, currency_code). Published quotes only; non-publication cells removed.
+    columns:
+      - name: units_per_eur
+        data_tests: [not_null]
+  - name: int__reference__fx_publication_dates
+    description: Grain rate_date. Dates on which the ECB published at least one quote.
+  - name: int__reference__fx_eur_units_per_eur
+    description: Grain rate_date. The EUR base rate (1 EUR per EUR) on every publication date.
+  - name: int__reference__fx_units_per_eur
+    description: Grain (rate_date, currency_code). Published quotes plus the EUR base rate.
+  - name: int__reference__fx_reporting_units_per_eur
+    description: Grain rate_date. Units of var('reporting_currency') per 1 EUR on each publication date.
+  - name: int__reference__fx_units_with_reporting_units
+    description: Grain (rate_date, currency_code). Each quote beside the reporting currency's quote for the same date.
+  - name: int__reference__fx_cross_rates
+    description: >
+      Grain (rate_date, currency_code), publication dates only. Units of
+      reporting currency per 1 unit of currency_code.
+  - name: int__reference__calendar_days
+    description: Grain date_day. Every day in [var('start_date'), var('end_date')].
+  - name: int__reference__calendar_days_with_holidays
+    description: Grain date_day. Every calendar day; holiday_date is set on named reference holidays, else null.

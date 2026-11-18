@@ -1,11 +1,17 @@
 models:
   - name: int__fulfillment__shipments_with_orders
-    description: One row per shipment with order ownership.
+    description: Grain shipment_id. Shipment with order ownership.
+  - name: int__fulfillment__events_with_delivery_time
+    description: Grain shipment event. delivered_event_at is event_at for delivery events, else null.
   - name: int__fulfillment__shipment_event_summary
-    description: One row per shipment with first and delivery events.
+    description: Grain shipment_id. First event and delivery time per shipment.
+  - name: int__fulfillment__attempts_with_failure_flag
+    description: Grain delivery attempt. is_failed_attempt is 1 for failed attempts, else 0.
   - name: int__fulfillment__delivery_attempt_summary
-    description: One row per shipment with attempted and failed deliveries.
+    description: Grain shipment_id. Attempted and failed deliveries per shipment.
+  - name: int__fulfillment__shipments_with_summaries
+    description: >
+      Grain shipment_id. Shipment beside its delivery time and failed-attempt
+      count; both are null when the shipment has no events or attempts.
   - name: int__fulfillment__shipments_with_delivery
-    description: One row per shipment with delivery latency and failed attempts.
-  - name: int__fulfillment__delayed_shipments
-    description: One row per shipment delivered more than three days after shipping.
+    description: Grain shipment_id. Shipment with delivery latency and failed attempts.

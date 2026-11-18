@@ -8,3 +8,32 @@ unit_tests:
     expect:
       rows:
         - {customer_id: 1, days_to_second_order: 3}
+
+  - name: int__lifecycle__email_response_windows__ends_thirty_days_after_send_date
+    model: int__lifecycle__email_response_windows
+    overrides:
+      vars: {email_response_days: 30}
+    given:
+      - input: ref('stg__marketing__email_sends')
+        rows:
+          - {email_send_id: 1, customer_id: 7, sent_at: 2025-01-01 18:30:00}
+    expect:
+      rows:
+        - {email_send_id: 1, customer_id: 7, sent_date: 2025-01-01, response_window_end: 2025-01-31}
+
+  - name: int__lifecycle__email_send_orders__uses_response_window
+    model: int__lifecycle__email_send_orders
+    given:
+      - input: ref('int__lifecycle__email_response_windows')
+        rows:
+          - {email_send_id: 1, customer_id: 7, sent_date: 2025-01-01, response_window_end: 2025-01-31}
+          - {email_send_id: 2, customer_id: 8, sent_date: 2025-01-01, response_window_end: 2025-01-31}
+      - input: ref('int__purchases__completed_orders')
+        rows:
+          - {order_id: 9, customer_id: 7, order_date: 2024-12-31}
+          - {order_id: 10, customer_id: 7, order_date: 2025-01-31}
+          - {order_id: 11, customer_id: 7, order_date: 2025-02-01}
+    expect:
+      rows:
+        - {email_send_id: 1, customer_id: 7, order_id: 10}
+        - {email_send_id: 2, customer_id: 8, order_id: null}

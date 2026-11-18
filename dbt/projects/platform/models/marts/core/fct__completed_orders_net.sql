@@ -5,7 +5,9 @@ select
     currency_code,
     order_date,
     order_amount,
-    discount_amount_minor,
+    coalesce(discount_amount_minor, 0) as discount_amount_minor,
     applied_discount_percent,
-    net_order_amount
-from {{ ref('int__orders__with_discounts') }}
+    cast(order_amount - {{ marketplace_macros.minor_units_to_major(
+        'coalesce(discount_amount_minor, 0)', 'currency_code'
+    ) }} as decimal(18, 4)) as net_order_amount
+from {{ ref('int__orders__completed_with_discounts') }}

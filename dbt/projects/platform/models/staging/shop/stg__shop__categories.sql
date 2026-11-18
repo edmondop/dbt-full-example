@@ -1,4 +1,4 @@
 select
     id as category_id,
-    name as category_name
+    cast(name as varchar) as category_name
 from {{ source('shop', 'categories') }}

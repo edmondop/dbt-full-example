@@ -5,4 +5,4 @@ select
     rate_to_reporting,
     source_rate_date,
     days_carried_forward > 0 as is_carried_forward
-from {{ ref('int__fx__rates_by_day') }}
+from {{ ref('int__fx_rates__rates_by_day') }}

@@ -1,0 +1,15 @@
+models:
+  - name: int__fx_monitoring__currency_days_with_rates
+    description: >
+      Grain (reference calendar day, supported currency). Includes days with
+      no usable rate; rate_to_reporting is null there.
+  - name: int__fx_monitoring__coverage_by_day
+    description: Grain date_day. Supported currencies and how many of them have a usable rate.
+  - name: int__fx_monitoring__publications_by_day
+    description: Grain rate_date. Number of currencies the ECB published on that date (EUR excluded).
+  - name: int__fx_monitoring__coverage_with_publications
+    description: Grain date_day. Coverage counts beside the publication count; null published count on non-publication days.
+  - name: int__fx_monitoring__usable_rates
+    description: Grain (currency_code, rate_date). Days whose carry-forward policy yields a rate.
+  - name: int__fx_monitoring__latest_rate_dates
+    description: Grain currency_code. Most recent day with a usable rate.

@@ -1,21 +1,8 @@
-{#- One select per currency column; the column list is a project var, so adding
-    a currency is a vars change plus a new column in the export. -#}
-with unpivoted as (
-    {%- for currency in var('fx_currencies') %}
-        select
-            cast(date as date) as rate_date,
-            '{{ currency | upper }}' as currency_code,
-            nullif(trim({{ currency | lower }}), 'N/A') as rate_text
-        from {{ source('reference', 'fx_rates') }}
-        {%- if not loop.last %}
-            union all
-        {%- endif %}
-    {%- endfor %}
-)
-
+{#- One column per currency in var('fx_currencies'), so adding a currency is a
+    vars change plus a new column in the export. `N/A` (no publication) becomes null. -#}
 select
-    rate_date,
-    currency_code,
-    cast(rate_text as decimal(18, 6)) as units_per_eur
-from unpivoted
-where rate_text is not null
+    {%- for currency in var('fx_currencies') %}
+        cast(nullif(trim({{ currency | lower }}), 'N/A') as decimal(18, 6)) as {{ currency | lower }}_per_eur,
+    {%- endfor %}
+    cast(date as date) as rate_date
+from {{ source('reference', 'fx_rates') }}

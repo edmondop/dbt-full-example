@@ -1,11 +1,13 @@
 models:
   - name: int__customers__first_order
-    description: First completed order date per customer.
+    description: Grain customer_id. First completed order date per customer.
+  - name: int__customers__orders_with_completion_flag
+    description: Grain order (customer_id repeated). is_completed_order is 1 for completed orders, else 0.
   - name: int__customers__order_counts
-    description: Order and completed-order counts per customer.
-  - name: int__customers__lifetime_spend
-    description: Completed gross spend per customer and original currency.
+    description: Grain customer_id. Order and completed-order counts per customer.
   - name: int__customers__with_country_currency
-    description: Customer with home-market currency.
-  - name: int__customers__merchant_affinity
-    description: Completed order count per customer and merchant.
+    description: Grain customer_id. Customer with home-market currency.
+  - name: int__customers__with_order_facts
+    description: >
+      Grain customer_id. Customer with home currency, first completed order and
+      completed-order count; the order facts are null for customers without orders.

@@ -1,0 +1,14 @@
+models:
+  - name: int__purchases__completed_orders
+    description: Grain order_id. Completed orders only, with their calendar month.
+    columns:
+      - name: order_id
+        data_tests: [unique, not_null]
+  - name: int__purchases__completion_flags
+    description: Grain order_id. Every order with completed_order = 1 when completed, else 0.
+  - name: int__purchases__completed_lines_with_category
+    description: Grain order line of a completed order. Quantity and minor amount beside product category and order currency.
+  - name: int__purchases__failed_payment_attempts
+    description: Grain payment_id. Provider payment attempts that failed.
+  - name: int__purchases__failed_attempts_with_customer
+    description: Grain payment_id. Each failed payment attempt with the customer who placed the order.

@@ -7,31 +7,37 @@ unit_tests:
     overrides:
       vars: {business_timezone: Asia/Tokyo}
     given:
-      - input: ref('stg__shop__orders')
+      - input: ref('int__orders__orders_with_item_totals')
         rows:
-          - {order_id: 1, currency_code: JPY, ordered_at: "2025-01-31 23:30:00"}
-      - input: ref('stg__shop__order_items')
-        rows:
-          - {order_id: 1, line_amount_minor: 1200}
-          - {order_id: 1, line_amount_minor: 300}
+          - {order_id: 1, currency_code: JPY, ordered_at: "2025-01-31 23:30:00", order_amount_minor: 1500}
     expect:
       rows:
         - {order_id: 1, order_date: 2025-02-01, order_amount_minor: 1500, order_amount: 1500}
 
-  - name: int__orders__with_amounts__order_without_items_totals_zero
-    model: int__orders__with_amounts
+  - name: int__orders__orders_with_item_totals__keeps_order_without_items
+    model: int__orders__orders_with_item_totals
     given:
       - input: ref('stg__shop__orders')
         rows:
           - {order_id: 2, currency_code: EUR, ordered_at: "2025-01-01 10:00:00"}
-      - input: ref('stg__shop__order_items')
+      - input: ref('int__orders__item_totals')
         rows: []
+    expect:
+      rows:
+        - {order_id: 2, order_amount_minor: null}
+
+  - name: int__orders__with_amounts__order_without_items_totals_zero
+    model: int__orders__with_amounts
+    given:
+      - input: ref('int__orders__orders_with_item_totals')
+        rows:
+          - {order_id: 2, currency_code: EUR, ordered_at: "2025-01-01 10:00:00", order_amount_minor: null}
     expect:
       rows:
         - {order_id: 2, order_amount_minor: 0, order_amount: 0}
 
-  - name: int__orders__with_discounts__uses_applied_promotion
-    model: int__orders__with_discounts
+  - name: int__orders__completed_with_discounts__uses_applied_promotion
+    model: int__orders__completed_with_discounts
     given:
       - input: ref('int__orders__completed')
         rows:
@@ -44,4 +50,4 @@ unit_tests:
           - {promotion_id: 3, merchant_id: 3, discount_percent: 10}
     expect:
       rows:
-        - {order_id: 1, discount_amount_minor: 250, applied_discount_percent: 10, net_order_amount: 97.5}
+        - {order_id: 1, discount_amount_minor: 250, applied_discount_percent: 10}
