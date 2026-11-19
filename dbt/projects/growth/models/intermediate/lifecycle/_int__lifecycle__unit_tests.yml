@@ -16,7 +16,7 @@ unit_tests:
     given:
       - input: ref('stg__marketing__email_sends')
         rows:
-          - {email_send_id: 1, customer_id: 7, sent_at: 2025-01-01 18:30:00}
+          - {email_send_id: 1, customer_id: 7, sent_at: "2025-01-01 18:30:00"}
     expect:
       rows:
         - {email_send_id: 1, customer_id: 7, sent_date: 2025-01-01, response_window_end: 2025-01-31}
