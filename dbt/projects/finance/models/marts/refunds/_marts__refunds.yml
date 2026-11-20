@@ -1,20 +1,70 @@
 models:
   - name: fct__refunds_by_merchant_by_month__usd_total
-    description: Refunded and gross settled USD per (month, merchant).
+    description: One row per month and merchant. Sums daily refunded and gross USD amounts from platform's 
+      payments_by_day.
     access: protected
     config:
       contract: {enforced: true}
     columns:
-      - {name: refund_month, data_type: date, constraints: [{type: not_null}]}
-      - {name: merchant_id, data_type: bigint, constraints: [{type: not_null}]}
-      - {name: refunded_amount_usd, data_type: "decimal(18, 4)"}
-      - {name: gross_amount_usd, data_type: "decimal(18, 4)"}
-
+      - name: refund_month
+        description: '{{ doc("refund_month") }}'
+        data_type: date
+        constraints: [type: not_null]
+      - name: merchant_id
+        description: '{{ doc("merchant_id") }}'
+        data_type: bigint
+        constraints: [type: not_null]
+      - name: refunded_amount_usd
+        description: '{{ doc("refunded_amount_usd") }}'
+        data_type: "decimal(18, 4)"
+      - name: gross_amount_usd
+        description: '{{ doc("gross_amount_usd") }}'
+        data_type: "decimal(18, 4)"
   - name: fct__refunds_by_day
-    description: Daily refund amount in original currency.
+    description: One row per refund_date, merchant and currency. Refund count and amount.
+    columns:
+      - name: refund_date
+        description: '{{ doc("refund_date") }}'
+      - name: merchant_id
+        description: '{{ doc("merchant_id") }}'
+      - name: currency_code
+        description: '{{ doc("currency_code") }}'
+      - name: refund_count
+        description: '{{ doc("refund_count") }}'
+      - name: refunded_amount
+        description: '{{ doc("refunded_amount") }}'
   - name: fct__refunds_by_merchant
-    description: Cumulative refunds by merchant and currency.
+    description: One row per merchant and currency. Counts and sums refunds.
+    columns:
+      - name: merchant_id
+        description: '{{ doc("merchant_id") }}'
+      - name: currency_code
+        description: '{{ doc("currency_code") }}'
+      - name: refund_count
+        description: '{{ doc("refund_count") }}'
+      - name: refunded_amount
+        description: '{{ doc("refunded_amount") }}'
   - name: fct__refunds_by_customer
-    description: Cumulative refunds by customer and currency.
+    description: One row per customer, country and currency. Counts and sums refunds.
+    columns:
+      - name: customer_id
+        description: '{{ doc("customer_id") }}'
+      - name: country_code
+        description: '{{ doc("country_code") }}'
+      - name: currency_code
+        description: '{{ doc("currency_code") }}'
+      - name: refund_count
+        description: '{{ doc("refund_count") }}'
+      - name: refunded_amount
+        description: '{{ doc("refunded_amount") }}'
   - name: fct__refund_rate_by_merchant
-    description: Share of completed orders with a refund by merchant.
+    description: One row per merchant with a completed order. Divides refunded orders by completed orders.
+    columns:
+      - name: merchant_id
+        description: '{{ doc("merchant_id") }}'
+      - name: completed_orders
+        description: '{{ doc("completed_orders") }}'
+      - name: refunded_orders
+        description: '{{ doc("refunded_orders") }}'
+      - name: refund_rate
+        description: '{{ doc("refund_rate") }}'

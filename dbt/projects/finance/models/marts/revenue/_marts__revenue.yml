@@ -1,24 +1,86 @@
 models:
   - name: fct__revenue_by_day__usd_total
-    description: Completed-order revenue per (order_date, merchant) in USD.
+    description: One row per order_date and merchant. Counts completed orders and sums USD revenue.
     access: protected
     config:
       contract: {enforced: true}
     columns:
-      - {name: order_date, data_type: date, constraints: [{type: not_null}]}
-      - {name: merchant_id, data_type: bigint, constraints: [{type: not_null}]}
-      - {name: completed_orders, data_type: bigint}
-      - {name: revenue_usd, data_type: "decimal(18, 4)"}
-
+      - name: order_date
+        description: '{{ doc("order_date") }}'
+        data_type: date
+        constraints: [type: not_null]
+      - name: merchant_id
+        description: '{{ doc("merchant_id") }}'
+        data_type: bigint
+        constraints: [type: not_null]
+      - name: completed_orders
+        description: '{{ doc("completed_orders") }}'
+        data_type: bigint
+      - name: revenue_usd
+        description: '{{ doc("revenue_usd") }}'
+        data_type: "decimal(18, 4)"
   - name: fct__revenue_by_month__usd_total
-    description: Monthly merchant revenue in USD.
+    description: One row per revenue_month and merchant. Completed orders and USD revenue.
+    columns:
+      - name: revenue_month
+        description: '{{ doc("revenue_month") }}'
+      - name: merchant_id
+        description: '{{ doc("merchant_id") }}'
+      - name: completed_orders
+        description: '{{ doc("completed_orders") }}'
+      - name: revenue_usd
+        description: '{{ doc("revenue_usd") }}'
   - name: fct__revenue_by_merchant__usd_total
-    description: Lifetime completed-order revenue by merchant.
+    description: One row per merchant. Sums completed order revenue in USD.
+    columns:
+      - name: merchant_id
+        description: '{{ doc("merchant_id") }}'
+      - name: revenue_usd
+        description: '{{ doc("revenue_usd") }}'
   - name: fct__revenue_by_country__usd_total
-    description: Completed-order revenue by merchant country.
+    description: One row per merchant country. Sums completed order revenue in USD.
+    columns:
+      - name: country_code
+        description: '{{ doc("country_code") }}'
+      - name: revenue_usd
+        description: '{{ doc("revenue_usd") }}'
   - name: fct__revenue_by_currency__usd_total
-    description: Completed-order USD revenue by original currency.
+    description: One row per order currency. Counts completed orders and sums USD revenue.
+    columns:
+      - name: currency_code
+        description: '{{ doc("currency_code") }}'
+      - name: completed_orders
+        description: '{{ doc("completed_orders") }}'
+      - name: revenue_usd
+        description: '{{ doc("revenue_usd") }}'
   - name: fct__invoice_reconciliation
-    description: Invoice-grain billed, credited and adjusted amounts in original minor units.
+    description: One row per invoice with a known order. Invoiced, credited, adjusted and net billed 
+      minor-unit amounts.
+    columns:
+      - name: invoice_id
+        description: '{{ doc("invoice_id") }}'
+      - name: order_id
+        description: '{{ doc("order_id") }}'
+      - name: merchant_id
+        description: '{{ doc("merchant_id") }}'
+      - name: currency_code
+        description: '{{ doc("currency_code") }}'
+      - name: invoiced_minor
+        description: '{{ doc("invoiced_minor") }}'
+      - name: credited_minor
+        description: '{{ doc("credited_minor") }}'
+      - name: adjustment_minor
+        description: '{{ doc("adjustment_minor") }}'
+      - name: net_billed_minor
+        description: '{{ doc("net_billed_minor") }}'
   - name: fct__estimated_tax_by_merchant
-    description: Estimated tax per merchant and original currency for completed orders.
+    description: One row per merchant and currency. Counts completed taxed orders and sums estimated_tax.
+    columns:
+      - name: merchant_id
+        description: '{{ doc("merchant_id") }}'
+      - name: currency_code
+        description: '{{ doc("currency_code") }}'
+      - name: completed_orders
+        description: '{{ doc("completed_orders") }}'
+      - name: estimated_tax
+        description: '{{ doc("estimated_tax") }}'

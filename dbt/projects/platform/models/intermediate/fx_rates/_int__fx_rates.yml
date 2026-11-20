@@ -1,24 +1,70 @@
 models:
   - name: int__fx_rates__currencies
-    description: Grain currency_code. Currencies with at least one published cross rate, including EUR.
-  - name: int__fx_rates__currency_days
-    description: >
-      Grain (date_day, currency_code). Every calendar day for every currency;
-      published_rate_date is null on days without an ECB publication.
-  - name: int__fx_rates__source_rate_dates
-    description: Grain (date_day, currency_code). Most recent publication date on or before date_day.
-  - name: int__fx_rates__carry_forward_days
-    description: Grain (date_day, currency_code). Days between date_day and its source publication; 0 on publication days.
-  - name: int__fx_rates__carried_cross_rates
-    description: Grain (date_day, currency_code). The source publication's cross rate, before the carry-forward limit.
-  - name: int__fx_rates__rates_by_day
-    description: >
-      Rate into var('reporting_currency') for every (calendar day, currency),
-      carrying the last ECB publication forward over non-publication days.
+    description: One row per currency with an ECB cross rate.
     columns:
-      - name: rate_to_reporting
-        description: Units of reporting currency per 1 unit of currency_code; null when the last publication is too old.
+      - name: currency_code
+        description: '{{ doc("currency_code__fx") }}'
+  - name: int__fx_rates__currency_days
+    description: >-
+      One row per calendar day and quoted currency. Left-joins the publication date when the ECB quoted that currency
+      that day.
+    columns:
+      - name: date_day
+        description: '{{ doc("date_day") }}'
+      - name: currency_code
+        description: '{{ doc("currency_code__fx") }}'
+      - name: published_rate_date
+        description: '{{ doc("published_rate_date") }}'
+  - name: int__fx_rates__source_rate_dates
+    description: One row per calendar day and quoted currency. Carries the latest publication date forward 
+      with a running max.
+    columns:
+      - name: date_day
+        description: '{{ doc("date_day") }}'
+      - name: currency_code
+        description: '{{ doc("currency_code__fx") }}'
       - name: source_rate_date
-        description: ECB publication date the rate comes from.
+        description: '{{ doc("source_rate_date") }}'
+  - name: int__fx_rates__carry_forward_days
+    description: One row per calendar day and quoted currency. Computes days from source_rate_date to 
+      date_day.
+    columns:
+      - name: date_day
+        description: '{{ doc("date_day") }}'
+      - name: currency_code
+        description: '{{ doc("currency_code__fx") }}'
+      - name: source_rate_date
+        description: '{{ doc("source_rate_date") }}'
       - name: days_carried_forward
-        description: 0 on publication days.
+        description: '{{ doc("days_carried_forward") }}'
+  - name: int__fx_rates__carried_cross_rates
+    description: One row per calendar day and quoted currency. Left-joins the cross rate published on 
+      source_rate_date.
+    columns:
+      - name: date_day
+        description: '{{ doc("date_day") }}'
+      - name: currency_code
+        description: '{{ doc("currency_code__fx") }}'
+      - name: source_rate_date
+        description: '{{ doc("source_rate_date") }}'
+      - name: days_carried_forward
+        description: '{{ doc("days_carried_forward") }}'
+      - name: source_rate_to_reporting
+        description: '{{ doc("source_rate_to_reporting") }}'
+  - name: int__fx_rates__rates_by_day
+    description: >-
+      One row per calendar day and quoted currency. Nulls the rate when days_carried_forward exceeds var('fx_max_carry_forward_days').
+      Ephemeral outside unit tests.
+    columns:
+      - name: rate_date
+        description: '{{ doc("rate_date") }}'
+      - name: currency_code
+        description: '{{ doc("currency_code__fx") }}'
+      - name: reporting_currency_code
+        description: '{{ doc("reporting_currency_code") }}'
+      - name: source_rate_date
+        description: '{{ doc("source_rate_date") }}'
+      - name: days_carried_forward
+        description: '{{ doc("days_carried_forward") }}'
+      - name: rate_to_reporting
+        description: '{{ doc("rate_to_reporting") }}'

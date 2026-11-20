@@ -29,35 +29,98 @@ sources:
 
 models:
   - name: stg__psp__payments
-    description: One row per payment attempt, including failed attempts.
+    description: One row per PSP payment attempt. Converts epoch created to a UTC timestamp and the minor-unit
+      amount to major units.
     columns:
       - name: payment_id
+        description: '{{ doc("payment_id") }}'
         data_tests: [unique, not_null]
       - name: order_id
+        description: '{{ doc("order_id") }}'
         data_tests: [not_null]
+      - name: currency_code
+        description: '{{ doc("currency_code") }}'
+      - name: amount_minor
+        description: '{{ doc("amount_minor") }}'
+      - name: amount
+        description: '{{ doc("amount") }}'
       - name: payment_status
+        description: '{{ doc("payment_status") }}'
         data_tests:
           - accepted_values:
               arguments:
                 values: [succeeded, failed]
 
+      - name: created_at
+        description: '{{ doc("created_at") }}'
+      - name: loaded_at
+        description: '{{ doc("loaded_at") }}'
   - name: stg__psp__refunds
-    description: One row per refund. Partial refunds carry less than the payment amount.
+    description: One row per PSP refund in any status. Converts epoch created to a UTC timestamp and the 
+      minor-unit amount to major units.
     columns:
       - name: refund_id
+        description: '{{ doc("refund_id") }}'
         data_tests: [unique, not_null]
       - name: payment_id
+        description: '{{ doc("payment_id") }}'
         data_tests:
           - relationships:
               arguments:
                 to: ref('stg__psp__payments')
                 field: payment_id
 
+      - name: currency_code
+        description: '{{ doc("currency_code") }}'
+      - name: amount_minor
+        description: '{{ doc("amount_minor") }}'
+      - name: amount
+        description: '{{ doc("amount") }}'
+      - name: refund_reason
+        description: '{{ doc("refund_reason") }}'
+      - name: refund_status
+        description: '{{ doc("refund_status") }}'
+      - name: refunded_at
+        description: '{{ doc("refunded_at") }}'
+      - name: loaded_at
+        description: '{{ doc("loaded_at") }}'
   - name: stg__psp__fees
-    description: One provider fee per captured payment, in minor units.
+    description: One row per PSP fee. Selects payment_id and fee_minor.
+    columns:
+      - name: payment_id
+        description: '{{ doc("payment_id") }}'
+      - name: fee_minor
+        description: '{{ doc("fee_minor") }}'
   - name: stg__psp__disputes
-    description: One row per payment dispute.
+    description: One row per PSP dispute. Renames the source id and status.
+    columns:
+      - name: dispute_id
+        description: '{{ doc("dispute_id") }}'
+      - name: payment_id
+        description: '{{ doc("payment_id") }}'
+      - name: amount_minor
+        description: '{{ doc("amount_minor") }}'
+      - name: dispute_status
+        description: '{{ doc("dispute_status") }}'
   - name: stg__psp__balance_transactions
-    description: One provider balance transaction per captured payment.
+    description: One row per PSP balance transaction. Renames the source id.
+    columns:
+      - name: balance_transaction_id
+        description: '{{ doc("balance_transaction_id") }}'
+      - name: payment_id
+        description: '{{ doc("payment_id") }}'
+      - name: net_minor
+        description: '{{ doc("net_minor") }}'
+      - name: available_at
+        description: '{{ doc("available_at") }}'
   - name: stg__psp__payouts
-    description: One provider payout linked to a payment.
+    description: One row per PSP payout. Renames the source id.
+    columns:
+      - name: payout_id
+        description: '{{ doc("payout_id") }}'
+      - name: merchant_id
+        description: '{{ doc("merchant_id") }}'
+      - name: payment_id
+        description: '{{ doc("payment_id") }}'
+      - name: paid_at
+        description: '{{ doc("paid_at") }}'

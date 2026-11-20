@@ -1,6 +1,6 @@
 models:
   - name: fct__shipments
-    description: Shipment grain with measured delivery time.
+    description: One row per shipment with a known order. Left-joins the label's tracking code.
     access: public
     config:
       contract:
@@ -11,33 +11,70 @@ models:
         data_tests:
           - unique
           - not_null
-        description: Fulfillment shipment identifier.
+        description: '{{ doc("shipment_id") }}'
       - name: order_id
         data_type: bigint
-        description: Marketplace order identifier.
+        description: '{{ doc("order_id") }}'
       - name: customer_id
         data_type: bigint
-        description: Marketplace customer identifier.
+        description: '{{ doc("customer_id") }}'
       - name: merchant_id
         data_type: bigint
-        description: Marketplace merchant identifier.
+        description: '{{ doc("merchant_id") }}'
       - name: shipped_at
         data_type: timestamp
-        description: UTC timestamp when the shipment left the warehouse.
+        description: '{{ doc("shipped_at") }}'
       - name: delivered_at
         data_type: timestamp
-        description: UTC timestamp of the delivered shipment event.
+        description: '{{ doc("delivered_at") }}'
       - name: delivery_days
         data_type: integer
-        description: Elapsed calendar days from shipment to delivery.
+        description: '{{ doc("delivery_days") }}'
       - name: tracking_code
         data_type: varchar
-        description: Carrier tracking code on the issued shipping label.
+        description: '{{ doc("tracking_code") }}'
   - name: fct__delivery_attempts
-    description: One row per carrier delivery attempt.
+    description: One row per delivery attempt whose shipment and carrier exist. Inner-joins order_id and 
+      carrier_name.
+    columns:
+      - name: shipment_id
+        description: '{{ doc("shipment_id") }}'
+      - name: order_id
+        description: '{{ doc("order_id") }}'
+      - name: attempt_at
+        description: '{{ doc("attempt_at") }}'
+      - name: outcome
+        description: '{{ doc("outcome") }}'
+      - name: carrier_name
+        description: '{{ doc("carrier_name") }}'
   - name: fct__delayed_shipments
-    description: Grain shipment_id. Shipments delivered more than three days after shipping (the operational target).
+    description: One row per shipment with delivery_days greater than 3.
+    columns:
+      - name: shipment_id
+        description: '{{ doc("shipment_id") }}'
+      - name: order_id
+        description: '{{ doc("order_id") }}'
+      - name: merchant_id
+        description: '{{ doc("merchant_id") }}'
+      - name: delivery_days
+        description: '{{ doc("delivery_days") }}'
+      - name: failed_attempts
+        description: '{{ doc("failed_attempts") }}'
   - name: dim__warehouses
-    description: Warehouse locations.
+    description: One row per warehouse with its country.
+    columns:
+      - name: warehouse_id
+        description: '{{ doc("warehouse_id") }}'
+      - name: country_code
+        description: '{{ doc("country_code") }}'
   - name: fct__inventory_snapshot
-    description: Current on-hand stock per product and warehouse.
+    description: One row per SKU and warehouse with a known product. Inner-joins the category.
+    columns:
+      - name: sku
+        description: '{{ doc("sku") }}'
+      - name: warehouse_id
+        description: '{{ doc("warehouse_id") }}'
+      - name: category_id
+        description: '{{ doc("category_id") }}'
+      - name: on_hand
+        description: '{{ doc("on_hand") }}'

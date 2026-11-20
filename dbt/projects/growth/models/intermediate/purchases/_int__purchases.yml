@@ -1,14 +1,56 @@
 models:
   - name: int__purchases__completed_orders
-    description: Grain order_id. Completed orders only, with their calendar month.
+    description: One row per completed order. Derives order_month from order_date.
     columns:
       - name: order_id
+        description: '{{ doc("order_id") }}'
         data_tests: [unique, not_null]
+      - name: customer_id
+        description: '{{ doc("customer_id") }}'
+      - name: merchant_id
+        description: '{{ doc("merchant_id") }}'
+      - name: order_date
+        description: '{{ doc("order_date") }}'
+      - name: order_month
+        description: '{{ doc("order_month") }}'
+      - name: currency_code
+        description: '{{ doc("currency_code") }}'
+      - name: order_amount
+        description: '{{ doc("order_amount") }}'
   - name: int__purchases__completion_flags
-    description: Grain order_id. Every order with completed_order = 1 when completed, else 0.
+    description: One row per order. Flags completed orders with completed_order.
+    columns:
+      - name: order_id
+        description: '{{ doc("order_id") }}'
+      - name: customer_id
+        description: '{{ doc("customer_id") }}'
+      - name: completed_order
+        description: '{{ doc("completed_order") }}'
   - name: int__purchases__completed_lines_with_category
-    description: Grain order line of a completed order. Quantity and minor amount beside product category and order currency.
+    description: One row per order line of a completed order with a known product. Inner-joins category and 
+      currency.
+    columns:
+      - name: category_id
+        description: '{{ doc("category_id") }}'
+      - name: category_name
+        description: '{{ doc("category_name") }}'
+      - name: currency_code
+        description: '{{ doc("currency_code") }}'
+      - name: quantity
+        description: '{{ doc("quantity") }}'
+      - name: line_amount_minor
+        description: '{{ doc("line_amount_minor") }}'
   - name: int__purchases__failed_payment_attempts
-    description: Grain payment_id. Provider payment attempts that failed.
+    description: One row per failed payment attempt.
+    columns:
+      - name: payment_id
+        description: '{{ doc("payment_id") }}'
+      - name: order_id
+        description: '{{ doc("order_id") }}'
   - name: int__purchases__failed_attempts_with_customer
-    description: Grain payment_id. Each failed payment attempt with the customer who placed the order.
+    description: One row per failed payment attempt with a known order. Inner-joins the order's customer.
+    columns:
+      - name: payment_id
+        description: '{{ doc("payment_id") }}'
+      - name: customer_id
+        description: '{{ doc("customer_id") }}'

@@ -1,35 +1,184 @@
 models:
   - name: int__revenue__completed_orders
-    description: Grain order_id. Platform orders with status `completed`, in original currency.
+    description: One row per completed order.
+    columns:
+      - name: order_id
+        description: '{{ doc("order_id") }}'
+      - name: merchant_id
+        description: '{{ doc("merchant_id") }}'
+      - name: order_date
+        description: '{{ doc("order_date") }}'
+      - name: currency_code
+        description: '{{ doc("currency_code") }}'
+      - name: order_amount
+        description: '{{ doc("order_amount") }}'
   - name: int__revenue__completed_orders_with_rates
-    description: >
-      Grain order_id. Completed orders beside the order day's USD rate; rate_to_usd
-      is null when platform has no usable rate for that day.
+    description: >-
+      One row per completed order. Left-joins the order date's rate_to_usd from platform's FX v1.
+    columns:
+      - name: order_id
+        description: '{{ doc("order_id") }}'
+      - name: merchant_id
+        description: '{{ doc("merchant_id") }}'
+      - name: order_date
+        description: '{{ doc("order_date") }}'
+      - name: currency_code
+        description: '{{ doc("currency_code") }}'
+      - name: order_amount
+        description: '{{ doc("order_amount") }}'
+      - name: rate_to_usd
+        description: '{{ doc("rate_to_usd") }}'
   - name: int__revenue__orders_settled
-    description: Grain order_id. Completed orders with their USD value at the order day's FX rate.
+    description: One row per completed order. Converts order_amount to USD at the order date's rate.
     access: private
     columns:
       - name: order_id
+        description: '{{ doc("order_id") }}'
         data_tests: [unique, not_null]
+      - name: merchant_id
+        description: '{{ doc("merchant_id") }}'
+      - name: order_date
+        description: '{{ doc("order_date") }}'
+      - name: currency_code
+        description: '{{ doc("currency_code") }}'
+      - name: order_amount
+        description: '{{ doc("order_amount") }}'
+      - name: rate_to_usd
+        description: '{{ doc("rate_to_usd") }}'
+      - name: order_amount_usd
+        description: '{{ doc("order_amount_usd") }}'
   - name: int__revenue__orders_settled_with_month
-    description: Grain order_id. Settled USD order value with its calendar revenue month.
+    description: One row per completed order. Derives revenue_month from order_date.
+    columns:
+      - name: order_id
+        description: '{{ doc("order_id") }}'
+      - name: merchant_id
+        description: '{{ doc("merchant_id") }}'
+      - name: revenue_month
+        description: '{{ doc("revenue_month") }}'
+      - name: order_amount_usd
+        description: '{{ doc("order_amount_usd") }}'
   - name: int__revenue__monthly_by_merchant
-    description: Grain (merchant_id, revenue_month). Completed orders and USD revenue.
+    description: One row per merchant and revenue_month. Counts completed orders and sums USD revenue.
+    columns:
+      - name: merchant_id
+        description: '{{ doc("merchant_id") }}'
+      - name: revenue_month
+        description: '{{ doc("revenue_month") }}'
+      - name: completed_orders
+        description: '{{ doc("completed_orders") }}'
+      - name: revenue_usd
+        description: '{{ doc("revenue_usd") }}'
   - name: int__revenue__orders_settled_with_country
-    description: Grain order_id. Settled USD order value with the merchant's country.
+    description: One row per completed order. Inner-joins the merchant's country.
+    columns:
+      - name: order_id
+        description: '{{ doc("order_id") }}'
+      - name: country_code
+        description: '{{ doc("country_code") }}'
+      - name: order_amount_usd
+        description: '{{ doc("order_amount_usd") }}'
   - name: int__revenue__completed_orders_with_tax_rates
-    description: Grain order_id. Completed orders with the tax rate of the merchant's country.
+    description: One row per completed order whose merchant country has a tax rate. Inner-joins rate_percent.
+    columns:
+      - name: order_id
+        description: '{{ doc("order_id") }}'
+      - name: merchant_id
+        description: '{{ doc("merchant_id") }}'
+      - name: order_date
+        description: '{{ doc("order_date") }}'
+      - name: currency_code
+        description: '{{ doc("currency_code") }}'
+      - name: order_amount
+        description: '{{ doc("order_amount") }}'
+      - name: rate_percent
+        description: '{{ doc("rate_percent") }}'
   - name: int__revenue__taxed_orders
-    description: Grain order_id. Completed order with estimated tax in original currency.
+    description: One row per completed order with a tax rate. Computes estimated_tax.
+    columns:
+      - name: order_id
+        description: '{{ doc("order_id") }}'
+      - name: merchant_id
+        description: '{{ doc("merchant_id") }}'
+      - name: order_date
+        description: '{{ doc("order_date") }}'
+      - name: currency_code
+        description: '{{ doc("currency_code") }}'
+      - name: order_amount
+        description: '{{ doc("order_amount") }}'
+      - name: rate_percent
+        description: '{{ doc("rate_percent") }}'
+      - name: estimated_tax
+        description: '{{ doc("estimated_tax") }}'
   - name: int__revenue__invoices_with_orders
-    description: Grain invoice_id. Invoice with order ownership.
+    description: One row per invoice with a known order. Inner-joins the order's customer, merchant, currency 
+      and amount.
+    columns:
+      - name: invoice_id
+        description: '{{ doc("invoice_id") }}'
+      - name: issued_at
+        description: '{{ doc("issued_at") }}'
+      - name: order_id
+        description: '{{ doc("order_id") }}'
+      - name: customer_id
+        description: '{{ doc("customer_id") }}'
+      - name: merchant_id
+        description: '{{ doc("merchant_id") }}'
+      - name: currency_code
+        description: '{{ doc("currency_code") }}'
+      - name: order_amount
+        description: '{{ doc("order_amount") }}'
   - name: int__revenue__invoice_lines_by_invoice
-    description: Grain invoice_id. Line count and minor-unit total.
+    description: One row per invoice with lines. Counts lines and sums their minor-unit amounts.
+    columns:
+      - name: invoice_id
+        description: '{{ doc("invoice_id") }}'
+      - name: line_count
+        description: '{{ doc("line_count") }}'
+      - name: invoiced_amount_minor
+        description: '{{ doc("invoiced_amount_minor") }}'
   - name: int__revenue__adjustments_by_invoice
-    description: Grain invoice_id. Sum of billing adjustments in minor units.
+    description: One row per invoice with an adjustment. Sums adjustment amounts.
+    columns:
+      - name: invoice_id
+        description: '{{ doc("invoice_id") }}'
+      - name: adjustment_minor
+        description: '{{ doc("adjustment_minor") }}'
   - name: int__revenue__invoices_with_amounts
-    description: >
-      Grain invoice_id. Invoiced, credited and adjusted minor units beside the
-      invoice; each amount is null when the invoice has none.
+    description: >-
+      One row per invoice with a known order. Left-joins line, credit note and adjustment totals.
+    columns:
+      - name: invoice_id
+        description: '{{ doc("invoice_id") }}'
+      - name: order_id
+        description: '{{ doc("order_id") }}'
+      - name: merchant_id
+        description: '{{ doc("merchant_id") }}'
+      - name: currency_code
+        description: '{{ doc("currency_code") }}'
+      - name: invoiced_amount_minor
+        description: '{{ doc("invoiced_amount_minor") }}'
+      - name: credited_minor
+        description: '{{ doc("credited_minor") }}'
+      - name: adjustment_minor
+        description: '{{ doc("adjustment_minor") }}'
   - name: int__revenue__invoice_balance
-    description: Grain invoice_id. Billed, credited and adjusted amounts in original minor units, absent amounts as 0.
+    description: One row per invoice with a known order. Computes net_billed_minor; missing amounts count as 
+      0.
+    columns:
+      - name: invoice_id
+        description: '{{ doc("invoice_id") }}'
+      - name: order_id
+        description: '{{ doc("order_id") }}'
+      - name: merchant_id
+        description: '{{ doc("merchant_id") }}'
+      - name: currency_code
+        description: '{{ doc("currency_code") }}'
+      - name: invoiced_minor
+        description: '{{ doc("invoiced_minor") }}'
+      - name: credited_minor
+        description: '{{ doc("credited_minor") }}'
+      - name: adjustment_minor
+        description: '{{ doc("adjustment_minor") }}'
+      - name: net_billed_minor
+        description: '{{ doc("net_billed_minor") }}'

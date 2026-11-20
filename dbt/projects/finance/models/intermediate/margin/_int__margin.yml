@@ -1,19 +1,107 @@
 models:
   - name: int__margin__fees_with_rates
-    description: One row per int__settlements__fees_by_payment fee, beside the payout day's USD rate.
+    description: One row per paid-out payment with a derived fee. Left-joins the payout date's rate_to_usd.
+    columns:
+      - name: payment_id
+        description: '{{ doc("payment_id") }}'
+      - name: merchant_id
+        description: '{{ doc("merchant_id") }}'
+      - name: payout_date
+        description: '{{ doc("payout_date") }}'
+      - name: fee_amount
+        description: '{{ doc("fee_amount__derived") }}'
+      - name: rate_to_usd
+        description: '{{ doc("rate_to_usd") }}'
   - name: int__margin__fees_value_usd
-    description: One row per int__settlements__fees_by_payment fee, in USD at the payout-day rate.
+    description: One row per paid-out payment with a derived fee. Converts fee_amount to USD.
+    columns:
+      - name: payment_id
+        description: '{{ doc("payment_id") }}'
+      - name: merchant_id
+        description: '{{ doc("merchant_id") }}'
+      - name: payout_date
+        description: '{{ doc("payout_date") }}'
+      - name: fee_usd
+        description: '{{ doc("fee_usd") }}'
   - name: int__margin__refunds_with_rates
-    description: Grain refund_id. Refund amount in original currency beside the refund day's USD rate.
+    description: One row per refund. Left-joins the refund date's rate_to_usd.
+    columns:
+      - name: refund_id
+        description: '{{ doc("refund_id") }}'
+      - name: merchant_id
+        description: '{{ doc("merchant_id") }}'
+      - name: refund_date
+        description: '{{ doc("refund_date") }}'
+      - name: amount
+        description: '{{ doc("amount") }}'
+      - name: rate_to_usd
+        description: '{{ doc("rate_to_usd") }}'
   - name: int__margin__refund_value_usd
-    description: Grain refund_id. Refund amount in USD at refund-day rate.
+    description: One row per refund. Converts amount to USD.
+    columns:
+      - name: refund_id
+        description: '{{ doc("refund_id") }}'
+      - name: merchant_id
+        description: '{{ doc("merchant_id") }}'
+      - name: refund_date
+        description: '{{ doc("refund_date") }}'
+      - name: refunded_usd
+        description: '{{ doc("refunded_usd") }}'
   - name: int__margin__activity
-    description: >
-      One row per settled order, refund or fee, keyed by (report_date, merchant_id);
-      each row carries its own USD measure and zero for the other two.
+    description: >-
+      One row per USD movement. Unions revenue, refund and fee rows; each branch fills its own measure and zeroes
+      the others.
+    columns:
+      - name: report_date
+        description: '{{ doc("report_date") }}'
+      - name: merchant_id
+        description: '{{ doc("merchant_id") }}'
+      - name: revenue_usd
+        description: '{{ doc("revenue_usd") }}'
+      - name: refunded_usd
+        description: '{{ doc("refunded_usd") }}'
+      - name: fee_usd
+        description: '{{ doc("fee_usd") }}'
   - name: int__margin__activity_by_day
-    description: Grain (report_date, merchant_id). USD revenue, refunds and fees.
+    description: One row per report_date and merchant. Sums USD revenue, refunds and fees.
+    columns:
+      - name: report_date
+        description: '{{ doc("report_date") }}'
+      - name: merchant_id
+        description: '{{ doc("merchant_id") }}'
+      - name: revenue_usd
+        description: '{{ doc("revenue_usd") }}'
+      - name: refunded_usd
+        description: '{{ doc("refunded_usd") }}'
+      - name: fee_usd
+        description: '{{ doc("fee_usd") }}'
   - name: int__margin__merchant_day_margin
-    description: Grain (report_date, merchant_id). Contribution after refunds and fees.
+    description: One row per report_date and merchant. Computes contribution_usd.
+    columns:
+      - name: report_date
+        description: '{{ doc("report_date") }}'
+      - name: merchant_id
+        description: '{{ doc("merchant_id") }}'
+      - name: revenue_usd
+        description: '{{ doc("revenue_usd") }}'
+      - name: refunded_usd
+        description: '{{ doc("refunded_usd") }}'
+      - name: fee_usd
+        description: '{{ doc("fee_usd") }}'
+      - name: contribution_usd
+        description: '{{ doc("contribution_usd") }}'
   - name: int__margin__negative_margin_days
-    description: Grain (report_date, merchant_id). Merchant-days with negative contribution.
+    description: One row per report_date and merchant with negative contribution_usd.
+    columns:
+      - name: report_date
+        description: '{{ doc("report_date") }}'
+      - name: merchant_id
+        description: '{{ doc("merchant_id") }}'
+      - name: revenue_usd
+        description: '{{ doc("revenue_usd") }}'
+      - name: refunded_usd
+        description: '{{ doc("refunded_usd") }}'
+      - name: fee_usd
+        description: '{{ doc("fee_usd") }}'
+      - name: contribution_usd
+        description: '{{ doc("contribution_usd") }}'

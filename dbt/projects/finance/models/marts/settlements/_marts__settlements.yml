@@ -1,11 +1,52 @@
 models:
   - name: fct__payouts_by_day
-    description: Daily payout count and provider net minor units.
+    description: One row per payout_date and merchant. Payout count and net_minor.
+    columns:
+      - name: payout_date
+        description: '{{ doc("payout_date") }}'
+      - name: merchant_id
+        description: '{{ doc("merchant_id") }}'
+      - name: payout_count
+        description: '{{ doc("payout_count") }}'
+      - name: net_minor
+        description: '{{ doc("net_minor") }}'
   - name: fct__fees_by_day
-    description: Provider fees by payout day and original currency.
+    description: One row per payout_date, merchant and currency. Sums derived fees.
+    columns:
+      - name: payout_date
+        description: '{{ doc("payout_date") }}'
+      - name: merchant_id
+        description: '{{ doc("merchant_id") }}'
+      - name: currency_code
+        description: '{{ doc("currency_code") }}'
+      - name: fee_amount
+        description: '{{ doc("fee_amount__derived") }}'
   - name: fct__settlement_lag_by_merchant
-    description: Payment-to-payout delay by merchant.
+    description: One row per merchant with a matched payout. Mean and maximum settlement lag in days.
+    columns:
+      - name: merchant_id
+        description: '{{ doc("merchant_id") }}'
+      - name: average_lag_days
+        description: '{{ doc("average_lag_days") }}'
+      - name: maximum_lag_days
+        description: '{{ doc("maximum_lag_days") }}'
   - name: fct__unmatched_payouts
-    description: Payouts lacking a captured payment attempt.
+    description: One row per payout whose payment_id has no row in platform's fct__payment_attempts.
+    columns:
+      - name: payout_id
+        description: '{{ doc("payout_id") }}'
+      - name: payment_id
+        description: '{{ doc("payment_id") }}'
+      - name: merchant_id
+        description: '{{ doc("merchant_id") }}'
+      - name: paid_at
+        description: '{{ doc("paid_at") }}'
   - name: fct__payouts_by_merchant
-    description: Cumulative payout net minor units per merchant.
+    description: One row per merchant. Counts payouts and sums net_minor.
+    columns:
+      - name: merchant_id
+        description: '{{ doc("merchant_id") }}'
+      - name: payout_count
+        description: '{{ doc("payout_count") }}'
+      - name: net_minor
+        description: '{{ doc("net_minor") }}'

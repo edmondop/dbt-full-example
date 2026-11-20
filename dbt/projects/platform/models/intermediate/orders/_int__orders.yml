@@ -1,23 +1,119 @@
 models:
   - name: int__orders__item_totals
-    description: Grain order_id. Sum of line amounts in minor units for orders with at least one item.
-  - name: int__orders__orders_with_item_totals
-    description: Grain order_id. Every order with its item total; order_amount_minor is null for orders without items.
-  - name: int__orders__with_amounts
-    description: >
-      Grain order_id. Orders with their total in the order currency (major units) and the
-      order date in var('business_timezone').
+    description: One row per order with lines. Sums line_amount_minor.
     columns:
       - name: order_id
+        description: '{{ doc("order_id") }}'
+      - name: order_amount_minor
+        description: '{{ doc("order_amount_minor") }}'
+  - name: int__orders__orders_with_item_totals
+    description: One row per order. Left-joins the order's line total.
+    columns:
+      - name: order_id
+        description: '{{ doc("order_id") }}'
+      - name: customer_id
+        description: '{{ doc("customer_id") }}'
+      - name: merchant_id
+        description: '{{ doc("merchant_id") }}'
+      - name: currency_code
+        description: '{{ doc("currency_code") }}'
+      - name: order_status
+        description: '{{ doc("order_status") }}'
+      - name: ordered_at
+        description: '{{ doc("ordered_at") }}'
+      - name: order_amount_minor
+        description: '{{ doc("order_amount_minor") }}'
+  - name: int__orders__with_amounts
+    description: >-
+      One row per order. Derives order_date in var('business_timezone') and the major-unit amount; orders without
+      lines get 0.
+    columns:
+      - name: order_id
+        description: '{{ doc("order_id") }}'
         data_tests: [unique, not_null]
-
+      - name: customer_id
+        description: '{{ doc("customer_id") }}'
+      - name: merchant_id
+        description: '{{ doc("merchant_id") }}'
+      - name: currency_code
+        description: '{{ doc("currency_code") }}'
+      - name: order_status
+        description: '{{ doc("order_status") }}'
+      - name: ordered_at
+        description: '{{ doc("ordered_at") }}'
+      - name: order_date
+        description: '{{ doc("order_date") }}'
+      - name: order_amount_minor
+        description: '{{ doc("order_amount_minor") }}'
+      - name: order_amount
+        description: '{{ doc("order_amount") }}'
   - name: int__orders__order_lines_with_products
-    description: Grain order line. Order line with catalog category and order currency.
+    description: One row per order line with a known product and order. Inner-joins category and order 
+      currency.
+    columns:
+      - name: order_item_id
+        description: '{{ doc("order_item_id") }}'
+      - name: order_id
+        description: '{{ doc("order_id") }}'
+      - name: sku
+        description: '{{ doc("sku") }}'
+      - name: quantity
+        description: '{{ doc("quantity") }}'
+      - name: line_amount_minor
+        description: '{{ doc("line_amount_minor") }}'
+      - name: category_id
+        description: '{{ doc("category_id") }}'
+      - name: currency_code
+        description: '{{ doc("currency_code") }}'
   - name: int__orders__discounts_by_order
-    description: Grain order_id. One row per discounted order.
+    description: One row per discounted order. Counts and sums its discounts.
+    columns:
+      - name: order_id
+        description: '{{ doc("order_id") }}'
+      - name: discount_count
+        description: '{{ doc("discount_count") }}'
+      - name: promotion_id
+        description: '{{ doc("promotion_id") }}'
+      - name: discount_amount_minor
+        description: '{{ doc("discount_amount_minor") }}'
   - name: int__orders__completed
-    description: Grain order_id. One row per completed order with its gross amount.
+    description: One row per completed order. Filters int__orders__with_amounts on order_status.
+    columns:
+      - name: order_id
+        description: '{{ doc("order_id") }}'
+      - name: customer_id
+        description: '{{ doc("customer_id") }}'
+      - name: merchant_id
+        description: '{{ doc("merchant_id") }}'
+      - name: currency_code
+        description: '{{ doc("currency_code") }}'
+      - name: order_status
+        description: '{{ doc("order_status") }}'
+      - name: ordered_at
+        description: '{{ doc("ordered_at") }}'
+      - name: order_date
+        description: '{{ doc("order_date") }}'
+      - name: order_amount_minor
+        description: '{{ doc("order_amount_minor") }}'
+      - name: order_amount
+        description: '{{ doc("order_amount") }}'
   - name: int__orders__completed_with_discounts
-    description: >
-      Grain order_id. Completed order beside its discount total and applied
-      promotion; discount columns are null when no discount applies.
+    description: >-
+      One row per completed order. Left-joins discount totals and the promotion's discount percent.
+    columns:
+      - name: order_id
+        description: '{{ doc("order_id") }}'
+      - name: customer_id
+        description: '{{ doc("customer_id") }}'
+      - name: merchant_id
+        description: '{{ doc("merchant_id") }}'
+      - name: order_date
+        description: '{{ doc("order_date") }}'
+      - name: currency_code
+        description: '{{ doc("currency_code") }}'
+      - name: order_amount
+        description: '{{ doc("order_amount") }}'
+      - name: discount_amount_minor
+        description: '{{ doc("discount_amount_minor") }}'
+      - name: applied_discount_percent
+        description: '{{ doc("applied_discount_percent") }}'

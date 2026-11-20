@@ -1,13 +1,52 @@
 models:
   - name: int__customers__first_order
-    description: Grain customer_id. First completed order date per customer.
+    description: One row per customer with a completed order. Takes the minimum order_date of 
+      int__orders__completed.
+    columns:
+      - name: customer_id
+        description: '{{ doc("customer_id") }}'
+      - name: first_order_date
+        description: '{{ doc("first_order_date") }}'
   - name: int__customers__orders_with_completion_flag
-    description: Grain order (customer_id repeated). is_completed_order is 1 for completed orders, else 0.
+    description: One row per order. Flags completed orders with is_completed_order.
+    columns:
+      - name: customer_id
+        description: '{{ doc("customer_id") }}'
+      - name: is_completed_order
+        description: '{{ doc("is_completed_order") }}'
   - name: int__customers__order_counts
-    description: Grain customer_id. Order and completed-order counts per customer.
+    description: One row per customer with an order. Counts all orders and completed orders.
+    columns:
+      - name: customer_id
+        description: '{{ doc("customer_id") }}'
+      - name: order_count
+        description: '{{ doc("order_count") }}'
+      - name: completed_order_count
+        description: '{{ doc("completed_order_count") }}'
   - name: int__customers__with_country_currency
-    description: Grain customer_id. Customer with home-market currency.
+    description: One row per customer. Left-joins the reference currency of the customer's country.
+    columns:
+      - name: customer_id
+        description: '{{ doc("customer_id") }}'
+      - name: country_code
+        description: '{{ doc("country_code") }}'
+      - name: home_currency_code
+        description: '{{ doc("home_currency_code") }}'
+      - name: created_at
+        description: '{{ doc("created_at") }}'
   - name: int__customers__with_order_facts
-    description: >
-      Grain customer_id. Customer with home currency, first completed order and
-      completed-order count; the order facts are null for customers without orders.
+    description: >-
+      One row per customer. Left-joins first completed order date and completed order count.
+    columns:
+      - name: customer_id
+        description: '{{ doc("customer_id") }}'
+      - name: country_code
+        description: '{{ doc("country_code") }}'
+      - name: home_currency_code
+        description: '{{ doc("home_currency_code") }}'
+      - name: created_at
+        description: '{{ doc("created_at") }}'
+      - name: first_order_date
+        description: '{{ doc("first_order_date") }}'
+      - name: completed_order_count
+        description: '{{ doc("completed_order_count") }}'

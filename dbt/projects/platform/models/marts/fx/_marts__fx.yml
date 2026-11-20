@@ -1,26 +1,33 @@
 models:
   - name: fct__fx_rates_by_day
-    description: >
-      Daily FX rate into the reporting currency for every calendar day and
-      currency, with ECB rates carried forward over non-publication days.
+    description: >-
+      One row per calendar day and quoted currency. Rate into var('reporting_currency') with ECB quotes carried
+      forward up to var('fx_max_carry_forward_days') days.
     access: public
     latest_version: 2
     config:
       contract: {enforced: true}
     columns:
-      - {name: rate_date, data_type: date, constraints: [type: not_null], description: Calendar date on which this
-          reporting rate applies.}
-      - {name: currency_code, data_type: varchar, constraints: [type: not_null], description: ISO currency code of the
-          original amount or rate.}
-      - {name: reporting_currency_code, data_type: varchar, description: ISO currency code of the reporting amount.}
+      - name: rate_date
+        data_type: date
+        constraints: [type: not_null]
+        description: '{{ doc("rate_date") }}'
+      - name: currency_code
+        data_type: varchar
+        constraints: [type: not_null]
+        description: '{{ doc("currency_code__fx") }}'
+      - name: reporting_currency_code
+        data_type: varchar
+        description: '{{ doc("reporting_currency_code") }}'
       - name: rate_to_reporting
         data_type: "decimal(18, 8)"
-        description: Units of reporting currency per 1 unit of currency_code; null when the last publication is older
-          than var('fx_max_carry_forward_days').
-      - {name: source_rate_date, data_type: date, description: Date of the last available ECB publication used for this
-          rate.}
-      - {name: is_carried_forward, data_type: boolean, description: True when a prior ECB publication supplies this
-          date.}
+        description: '{{ doc("rate_to_reporting") }}'
+      - name: source_rate_date
+        data_type: date
+        description: '{{ doc("source_rate_date") }}'
+      - name: is_carried_forward
+        data_type: boolean
+        description: '{{ doc("is_carried_forward") }}'
     versions:
       - v: 2
       - v: 1
@@ -31,11 +38,37 @@ models:
         columns:
           - include: all
             exclude: [rate_to_reporting, reporting_currency_code, is_carried_forward]
-          - {name: rate_to_usd, data_type: "decimal(18, 8)", description: USD per one original-currency unit.}
+          - name: rate_to_usd
+            data_type: "decimal(18, 8)"
+            description: '{{ doc("rate_to_usd") }}'
 
   - name: dim__currencies
-    description: Supported currency and minor-unit exponent.
+    description: One row per reference currency with its minor-unit exponent.
+    columns:
+      - name: currency_code
+        description: '{{ doc("currency_code__reference") }}'
+      - name: minor_units
+        description: '{{ doc("minor_units") }}'
   - name: fct__fx_coverage
-    description: Number of supported currencies with a usable rate each day.
+    description: One row per calendar day. Counts reference currencies with and without a usable rate, and ECB
+      publications.
+    columns:
+      - name: date_day
+        description: '{{ doc("date_day") }}'
+      - name: currency_count
+        description: '{{ doc("currency_count") }}'
+      - name: covered_currency_count
+        description: '{{ doc("covered_currency_count") }}'
+      - name: published_currency_count
+        description: '{{ doc("published_currency_count") }}'
+      - name: missing_currency_count
+        description: '{{ doc("missing_currency_count") }}'
   - name: fct__latest_fx_rates
-    description: Latest usable rate to reporting currency per source currency.
+    description: One row per currency with a usable rate. Inner-joins the rate on its latest rate_date.
+    columns:
+      - name: currency_code
+        description: '{{ doc("currency_code__fx") }}'
+      - name: rate_date
+        description: '{{ doc("rate_date") }}'
+      - name: rate_to_reporting
+        description: '{{ doc("rate_to_reporting") }}'

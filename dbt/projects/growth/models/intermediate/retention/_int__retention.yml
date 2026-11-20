@@ -1,17 +1,63 @@
 models:
   - name: int__retention__monthly_activity
-    description: Grain (customer_id, activity_month). Completed orders by customer and calendar month.
+    description: One row per customer and month with a completed order. Counts completed orders.
+    columns:
+      - name: customer_id
+        description: '{{ doc("customer_id") }}'
+      - name: activity_month
+        description: '{{ doc("activity_month") }}'
+      - name: completed_orders
+        description: '{{ doc("completed_orders") }}'
   - name: int__retention__last_order
-    description: Grain customer_id. Last completed order date per customer.
+    description: One row per customer with a completed order. Takes the maximum order_date.
+    columns:
+      - name: customer_id
+        description: '{{ doc("customer_id") }}'
+      - name: last_order_date
+        description: '{{ doc("last_order_date") }}'
   - name: int__retention__orders_after_first
-    description: Grain completed order. Completed orders dated after the customer's first-purchase day.
+    description: One row per completed order after the customer's first order date. Inner-joins 
+      first_order_date.
+    columns:
+      - name: customer_id
+        description: '{{ doc("customer_id") }}'
+      - name: first_order_date
+        description: '{{ doc("first_order_date") }}'
+      - name: order_date
+        description: '{{ doc("order_date") }}'
   - name: int__retention__second_order
-    description: Grain customer_id. First completed order date after the customer first-purchase day.
+    description: One row per customer with a second completed order. Takes the minimum later order_date.
+    columns:
+      - name: customer_id
+        description: '{{ doc("customer_id") }}'
+      - name: first_order_date
+        description: '{{ doc("first_order_date") }}'
+      - name: second_order_date
+        description: '{{ doc("second_order_date") }}'
   - name: int__retention__dormant_customers
-    description: Grain customer_id. Customers without a completed order during the dormancy window.
+    description: One row per customer whose last completed order is more than var('dormancy_days') days before
+      var('end_date').
+    columns:
+      - name: customer_id
+        description: '{{ doc("customer_id") }}'
+      - name: last_order_date
+        description: '{{ doc("last_order_date") }}'
   - name: int__retention__active_customer_months
-    description: Grain activity_month. Distinct active customers per calendar month.
+    description: One row per activity_month with a completed order. Counts distinct customers.
+    columns:
+      - name: activity_month
+        description: '{{ doc("activity_month") }}'
+      - name: active_customers
+        description: '{{ doc("active_customers") }}'
   - name: int__retention__calendar_months
-    description: Grain activity_month. Every month in the platform calendar.
+    description: One row per calendar month.
+    columns:
+      - name: activity_month
+        description: '{{ doc("activity_month") }}'
   - name: int__retention__monthly_active_counts
-    description: Grain activity_month. Every calendar month with its active customer count; null when none.
+    description: One row per calendar month. Left-joins active customer counts.
+    columns:
+      - name: activity_month
+        description: '{{ doc("activity_month") }}'
+      - name: active_customers
+        description: '{{ doc("active_customers") }}'

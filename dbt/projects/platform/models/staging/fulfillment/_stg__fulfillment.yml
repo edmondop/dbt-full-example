@@ -18,14 +18,54 @@ sources:
     description: Warehouse and carrier shipment event feed.
 models:
   - name: stg__fulfillment__warehouses
-    description: One row per warehouse location.
+    description: One row per warehouse. Uppercases the warehouse country.
+    columns:
+      - name: warehouse_id
+        description: '{{ doc("warehouse_id") }}'
+      - name: country_code
+        description: '{{ doc("country_code") }}'
   - name: stg__fulfillment__carriers
-    description: One row per delivery carrier.
+    description: One row per carrier. Renames the fulfillment carriers source.
+    columns:
+      - name: carrier_id
+        description: '{{ doc("carrier_id") }}'
+      - name: carrier_name
+        description: '{{ doc("carrier_name") }}'
   - name: stg__fulfillment__shipments
-    description: One row per shipped order.
+    description: One row per shipment. Renames the fulfillment shipments source.
+    columns:
+      - name: shipment_id
+        description: '{{ doc("shipment_id") }}'
+      - name: order_id
+        description: '{{ doc("order_id") }}'
+      - name: warehouse_id
+        description: '{{ doc("warehouse_id") }}'
+      - name: carrier_id
+        description: '{{ doc("carrier_id") }}'
+      - name: shipped_at
+        description: '{{ doc("shipped_at") }}'
   - name: stg__fulfillment__shipping_labels
-    description: One tracking label per shipment.
+    description: One row per shipping label. Selects shipment_id and tracking_code.
+    columns:
+      - name: shipment_id
+        description: '{{ doc("shipment_id") }}'
+      - name: tracking_code
+        description: '{{ doc("tracking_code") }}'
   - name: stg__fulfillment__shipment_events
-    description: One timestamped status event per shipment.
+    description: One row per shipment event. Renames status to event_status.
+    columns:
+      - name: shipment_id
+        description: '{{ doc("shipment_id") }}'
+      - name: event_status
+        description: '{{ doc("event_status") }}'
+      - name: event_at
+        description: '{{ doc("event_at__shipment") }}'
   - name: stg__fulfillment__delivery_attempts
-    description: One delivery attempt per shipment.
+    description: One row per delivery attempt. Selects the fulfillment delivery attempts source.
+    columns:
+      - name: shipment_id
+        description: '{{ doc("shipment_id") }}'
+      - name: attempt_at
+        description: '{{ doc("attempt_at") }}'
+      - name: outcome
+        description: '{{ doc("outcome") }}'

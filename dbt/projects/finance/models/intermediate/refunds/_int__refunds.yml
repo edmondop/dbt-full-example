@@ -1,19 +1,118 @@
 models:
   - name: int__refunds__refunds_with_orders
-    description: Grain refund_id. Refund with customer and original currency.
+    description: One row per refund whose order exists. Inner-joins the order's customer and currency.
+    columns:
+      - name: refund_id
+        description: '{{ doc("refund_id") }}'
+      - name: payment_id
+        description: '{{ doc("payment_id") }}'
+      - name: order_id
+        description: '{{ doc("order_id") }}'
+      - name: merchant_id
+        description: '{{ doc("merchant_id") }}'
+      - name: customer_id
+        description: '{{ doc("customer_id") }}'
+      - name: currency_code
+        description: '{{ doc("currency_code") }}'
+      - name: amount
+        description: '{{ doc("amount") }}'
+      - name: refunded_at
+        description: '{{ doc("refunded_at") }}'
   - name: int__refunds__dated_refunds
-    description: Grain refund_id. Refund with its UTC refund date.
+    description: One row per refund. Derives refund_date as the UTC date of refunded_at.
+    columns:
+      - name: refund_id
+        description: '{{ doc("refund_id") }}'
+      - name: payment_id
+        description: '{{ doc("payment_id") }}'
+      - name: order_id
+        description: '{{ doc("order_id") }}'
+      - name: merchant_id
+        description: '{{ doc("merchant_id") }}'
+      - name: customer_id
+        description: '{{ doc("customer_id") }}'
+      - name: currency_code
+        description: '{{ doc("currency_code") }}'
+      - name: amount
+        description: '{{ doc("amount") }}'
+      - name: refunded_at
+        description: '{{ doc("refunded_at") }}'
+      - name: refund_date
+        description: '{{ doc("refund_date") }}'
   - name: int__refunds__refunds_by_day
-    description: Grain (refund_date, merchant_id, currency_code). Refund count and amount in original currency.
+    description: One row per refund_date, merchant and currency. Counts and sums refunds.
+    columns:
+      - name: refund_date
+        description: '{{ doc("refund_date") }}'
+      - name: merchant_id
+        description: '{{ doc("merchant_id") }}'
+      - name: currency_code
+        description: '{{ doc("currency_code") }}'
+      - name: refund_count
+        description: '{{ doc("refund_count") }}'
+      - name: refunded_amount
+        description: '{{ doc("refunded_amount") }}'
   - name: int__refunds__refunds_by_order
-    description: Grain order_id. Refund count and cumulative refunded amount.
+    description: One row per refunded order. Counts and sums refunds.
+    columns:
+      - name: order_id
+        description: '{{ doc("order_id") }}'
+      - name: refund_count
+        description: '{{ doc("refund_count") }}'
+      - name: refunded_amount
+        description: '{{ doc("refunded_amount") }}'
   - name: int__refunds__completed_orders_with_refunds
-    description: Grain order_id. Completed orders; refunded_order_id is null when the order has no refund.
+    description: One row per completed order. Left-joins the order's refund summary.
+    columns:
+      - name: order_id
+        description: '{{ doc("order_id") }}'
+      - name: merchant_id
+        description: '{{ doc("merchant_id") }}'
+      - name: refunded_order_id
+        description: '{{ doc("refunded_order_id") }}'
   - name: int__refunds__refund_rate_by_merchant
-    description: Grain merchant_id. Completed orders and how many of them have a refund.
+    description: One row per merchant with a completed order. Counts completed and refunded orders.
+    columns:
+      - name: merchant_id
+        description: '{{ doc("merchant_id") }}'
+      - name: completed_orders
+        description: '{{ doc("completed_orders") }}'
+      - name: refunded_orders
+        description: '{{ doc("refunded_orders") }}'
   - name: int__refunds__refunds_with_customers
-    description: Grain refund_id. Refund with the customer's country.
+    description: One row per refund whose customer exists. Inner-joins the customer's country.
+    columns:
+      - name: refund_id
+        description: '{{ doc("refund_id") }}'
+      - name: customer_id
+        description: '{{ doc("customer_id") }}'
+      - name: country_code
+        description: '{{ doc("country_code") }}'
+      - name: currency_code
+        description: '{{ doc("currency_code") }}'
+      - name: amount
+        description: '{{ doc("amount") }}'
   - name: int__refunds__payment_days_with_month
-    description: Grain (payment_date, merchant_id, currency_code). Settled USD amounts with their calendar month.
+    description: One row per payment_date, merchant and currency. Derives refund_month from payment_date.
+    columns:
+      - name: payment_date
+        description: '{{ doc("payment_date") }}'
+      - name: merchant_id
+        description: '{{ doc("merchant_id") }}'
+      - name: currency_code
+        description: '{{ doc("currency_code") }}'
+      - name: refund_month
+        description: '{{ doc("refund_month") }}'
+      - name: refunded_amount_usd
+        description: '{{ doc("refunded_amount_usd") }}'
+      - name: gross_amount_usd
+        description: '{{ doc("gross_amount_usd") }}'
   - name: int__refunds__credit_notes_by_invoice
-    description: Grain invoice_id. Credit-note count and amount in minor units.
+    description: One row per invoice with a credit note. Counts and sums its credit notes.
+    columns:
+      - name: invoice_id
+        description: '{{ doc("invoice_id") }}'
+      - name: credit_note_count
+        description: '{{ doc("credit_note_count") }}'
+      - name: credited_minor
+        description: '{{ doc("credited_minor") }}'

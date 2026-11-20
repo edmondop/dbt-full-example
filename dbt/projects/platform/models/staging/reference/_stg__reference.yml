@@ -20,21 +20,45 @@ sources:
 
 models:
   - name: stg__reference__fx_rates
-    description: >
-      One row per ECB export date. Each currency in `var('fx_currencies')` is a
-      `<code>_per_eur` column; `N/A` cells (no rate published) are null.
+    description: >-
+      One row per ECB publication date. One `<currency>_per_eur` column per currency in var('fx_currencies'); `N/A`
+      becomes null.
     columns:
+      - name: usd_per_eur
+        description: '{{ doc("currency_units_per_eur") }}'
+      - name: jpy_per_eur
+        description: '{{ doc("currency_units_per_eur") }}'
+      - name: gbp_per_eur
+        description: '{{ doc("currency_units_per_eur") }}'
       - name: rate_date
+        description: '{{ doc("rate_date__publication") }}'
         data_tests: [unique, not_null]
-
   - name: stg__reference__currencies
-    description: One row per supported currency and minor-unit exponent.
+    description: One row per currency with its ISO 4217 minor-unit exponent.
 
+    columns:
+      - name: currency_code
+        description: '{{ doc("currency_code__reference") }}'
+      - name: minor_units
+        description: '{{ doc("minor_units") }}'
   - name: stg__reference__countries
-    description: One row per market country and home currency.
+    description: One row per country. Maps each country to its currency.
 
+    columns:
+      - name: country_code
+        description: '{{ doc("country_code") }}'
+      - name: currency_code
+        description: '{{ doc("currency_code__country") }}'
   - name: stg__reference__calendar
-    description: One row per date in the example reporting window.
+    description: One row per calendar day in the reference calendar.
 
+    columns:
+      - name: date_day
+        description: '{{ doc("date_day") }}'
   - name: stg__reference__holidays
     description: One row per reference holiday.
+    columns:
+      - name: date_day
+        description: '{{ doc("date_day") }}'
+      - name: holiday_label
+        description: '{{ doc("holiday_label") }}'

@@ -1,73 +1,118 @@
 models:
   - name: dim__calendar
-    description: One row per calendar day in [var('start_date'), var('end_date')].
+    description: One row per calendar day. Derives month, year, ISO weekday, weekend and holiday flags.
     access: public
     config:
       contract: {enforced: true}
     columns:
-      - {name: date_day, data_type: date, constraints: [type: not_null], data_tests: [unique], description: Calendar
-          date in the reporting period.}
-      - {name: month_start, data_type: date, description: First date of the calendar month.}
-      - {name: calendar_year, data_type: integer, description: Four-digit calendar year.}
-      - {name: iso_day_of_week, data_type: integer, description: Monday = 1 ... Sunday = 7}
-      - {name: is_weekend, data_type: boolean, description: True for Saturday or Sunday.}
-      - {name: is_holiday, data_type: boolean, description: True for a named reference holiday.}
-
+      - name: date_day
+        data_type: date
+        constraints: [type: not_null]
+        data_tests: [unique]
+        description: '{{ doc("date_day") }}'
+      - name: month_start
+        data_type: date
+        description: '{{ doc("month_start") }}'
+      - name: calendar_year
+        data_type: integer
+        description: '{{ doc("calendar_year") }}'
+      - name: iso_day_of_week
+        data_type: integer
+        description: '{{ doc("iso_day_of_week") }}'
+      - name: is_weekend
+        data_type: boolean
+        description: '{{ doc("is_weekend") }}'
+      - name: is_holiday
+        data_type: boolean
+        description: '{{ doc("is_holiday") }}'
   - name: dim__customers
-    description: One row per customer. No PII.
+    description: One row per customer. Signup date in var('business_timezone'), home currency and 
+      completed-order facts; excludes email.
     access: public
     config:
       contract: {enforced: true}
     columns:
-      - {name: customer_id, data_type: bigint, constraints: [type: not_null], data_tests: [unique], description:
-          Marketplace customer identifier.}
-      - {name: country_code, data_type: varchar, description: ISO country code of the customer or merchant.}
-      - {name: signup_date, data_type: date, description: "Signup day in var('business_timezone')."}
-      - {name: home_currency_code, data_type: varchar, description: ISO currency of the customer's home market.}
-      - {name: first_order_date, data_type: date, description: First completed-order business date or null.}
-      - {name: completed_order_count, data_type: bigint, description: Number of completed orders.}
-
+      - name: customer_id
+        data_type: bigint
+        constraints: [type: not_null]
+        data_tests: [unique]
+        description: '{{ doc("customer_id") }}'
+      - name: country_code
+        data_type: varchar
+        description: '{{ doc("country_code") }}'
+      - name: signup_date
+        data_type: date
+        description: "{{ doc(\"signup_date\") }}"
+      - name: home_currency_code
+        data_type: varchar
+        description: '{{ doc("home_currency_code") }}'
+      - name: first_order_date
+        data_type: date
+        description: '{{ doc("first_order_date") }}'
+      - name: completed_order_count
+        data_type: bigint
+        description: '{{ doc("completed_order_count") }}'
   - name: dim__merchants
-    description: One row per merchant.
+    description: One row per merchant with country, currency and time zone.
     access: public
     config:
       contract: {enforced: true}
     columns:
-      - {name: merchant_id, data_type: bigint, constraints: [type: not_null], data_tests: [unique], description:
-          Marketplace merchant identifier.}
-      - {name: merchant_name, data_type: varchar, description: Merchant display name.}
-      - {name: country_code, data_type: varchar, description: ISO country code of the customer or merchant.}
-      - {name: currency_code, data_type: varchar, description: Settlement currency.}
-      - {name: timezone, data_type: varchar, description: IANA time zone of the merchant.}
-
+      - name: merchant_id
+        data_type: bigint
+        constraints: [type: not_null]
+        data_tests: [unique]
+        description: '{{ doc("merchant_id") }}'
+      - name: merchant_name
+        data_type: varchar
+        description: '{{ doc("merchant_name") }}'
+      - name: country_code
+        data_type: varchar
+        description: '{{ doc("country_code") }}'
+      - name: currency_code
+        data_type: varchar
+        description: '{{ doc("currency_code__merchant") }}'
+      - name: timezone
+        data_type: varchar
+        description: '{{ doc("timezone") }}'
   - name: fct__orders
-    description: One row per order, amount in the order currency (major units).
+    description: One row per order in any status, with order_date in var('business_timezone') and the amount 
+      in major units.
     access: public
     config:
       contract: {enforced: true}
     columns:
-      - {name: order_id, data_type: bigint, constraints: [type: not_null], data_tests: [unique], description:
-          Marketplace order identifier.}
+      - name: order_id
+        data_type: bigint
+        constraints: [type: not_null]
+        data_tests: [unique]
+        description: '{{ doc("order_id") }}'
       - name: customer_id
         data_type: bigint
         data_tests:
           - relationships:
               arguments: {to: ref('dim__customers'), field: customer_id}
-        description: Marketplace customer identifier.
+        description: '{{ doc("customer_id") }}'
       - name: merchant_id
         data_type: bigint
         data_tests:
           - relationships:
               arguments: {to: ref('dim__merchants'), field: merchant_id}
-        description: Marketplace merchant identifier.
-      - {name: order_date, data_type: date, description: "Order day in var('business_timezone')."}
-      - {name: order_status, data_type: varchar, description: Order lifecycle state.}
-      - {name: currency_code, data_type: varchar, description: ISO currency code of the original amount or rate.}
-      - {name: order_amount, data_type: "decimal(18, 4)", description: 'Gross order amount in its original currency, in major
-          units.'}
-
+        description: '{{ doc("merchant_id") }}'
+      - name: order_date
+        data_type: date
+        description: "{{ doc(\"order_date\") }}"
+      - name: order_status
+        data_type: varchar
+        description: '{{ doc("order_status") }}'
+      - name: currency_code
+        data_type: varchar
+        description: '{{ doc("currency_code") }}'
+      - name: order_amount
+        data_type: "decimal(18, 4)"
+        description: '{{ doc("order_amount") }}'
   - name: dim__products
-    description: Product catalog without customer data.
+    description: One row per SKU. Left-joins the category name.
     access: public
     config:
       contract:
@@ -78,15 +123,15 @@ models:
         data_tests:
           - unique
           - not_null
-        description: Catalog stock-keeping unit identifier.
+        description: '{{ doc("sku") }}'
       - name: category_id
         data_type: bigint
-        description: Product category identifier.
+        description: '{{ doc("category_id") }}'
       - name: category_name
         data_type: varchar
-        description: Product category display name.
+        description: '{{ doc("category_name") }}'
   - name: fct__order_lines
-    description: Order-line grain for product and basket analysis.
+    description: One row per order line with a known product and order.
     access: public
     config:
       contract:
@@ -97,31 +142,65 @@ models:
         data_tests:
           - unique
           - not_null
-        description: Order-line identifier.
+        description: '{{ doc("order_item_id") }}'
       - name: order_id
         data_type: bigint
-        description: Marketplace order identifier.
+        description: '{{ doc("order_id") }}'
       - name: sku
         data_type: varchar
-        description: Catalog stock-keeping unit identifier.
+        description: '{{ doc("sku") }}'
       - name: category_id
         data_type: bigint
-        description: Product category identifier.
+        description: '{{ doc("category_id") }}'
       - name: quantity
         data_type: integer
-        description: Number of units on the order line.
+        description: '{{ doc("quantity") }}'
       - name: line_amount_minor
         data_type: bigint
-        description: Order-line amount in original-currency minor units.
+        description: '{{ doc("line_amount_minor") }}'
       - name: currency_code
         data_type: varchar
-        description: ISO currency code of the original amount or rate.
+        description: '{{ doc("currency_code") }}'
 
   - name: fct__completed_orders_net
-    description: Grain order_id. Completed order with applied promotion and net amount in the order currency.
+    description: One row per completed order. Subtracts discounts from order_amount; orders without discounts 
+      get discount_amount_minor 0.
 
+    columns:
+      - name: order_id
+        description: '{{ doc("order_id") }}'
+      - name: customer_id
+        description: '{{ doc("customer_id") }}'
+      - name: merchant_id
+        description: '{{ doc("merchant_id") }}'
+      - name: currency_code
+        description: '{{ doc("currency_code") }}'
+      - name: order_date
+        description: '{{ doc("order_date") }}'
+      - name: order_amount
+        description: '{{ doc("order_amount") }}'
+      - name: discount_amount_minor
+        description: '{{ doc("discount_amount_minor") }}'
+      - name: applied_discount_percent
+        description: '{{ doc("applied_discount_percent") }}'
+      - name: net_order_amount
+        description: '{{ doc("net_order_amount") }}'
   - name: fct__customer_spend_by_currency
-    description: Grain (customer_id, currency_code). Gross completed-order spend per customer and original currency.
+    description: One row per customer and currency. Sums completed order amounts.
 
+    columns:
+      - name: customer_id
+        description: '{{ doc("customer_id") }}'
+      - name: currency_code
+        description: '{{ doc("currency_code") }}'
+      - name: gross_spend
+        description: '{{ doc("gross_spend") }}'
   - name: fct__customer_merchant_affinity
-    description: Grain (customer_id, merchant_id). Completed order count per customer and merchant.
+    description: One row per customer and merchant. Counts completed orders.
+    columns:
+      - name: customer_id
+        description: '{{ doc("customer_id") }}'
+      - name: merchant_id
+        description: '{{ doc("merchant_id") }}'
+      - name: completed_orders
+        description: '{{ doc("completed_orders") }}'

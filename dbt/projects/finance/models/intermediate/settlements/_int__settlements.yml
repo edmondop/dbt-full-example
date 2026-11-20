@@ -1,13 +1,79 @@
 models:
   - name: int__settlements__payouts_with_attempts
-    description: Grain payout_id. Payout with captured attempt and currency.
+    description: One row per payout. Left-joins the payment attempt and its order's currency.
+    columns:
+      - name: payout_id
+        description: '{{ doc("payout_id") }}'
+      - name: payment_id
+        description: '{{ doc("payment_id") }}'
+      - name: merchant_id
+        description: '{{ doc("merchant_id") }}'
+      - name: paid_at
+        description: '{{ doc("paid_at") }}'
+      - name: net_minor
+        description: '{{ doc("net_minor") }}'
+      - name: order_id
+        description: '{{ doc("order_id") }}'
+      - name: gross_amount
+        description: '{{ doc("gross_amount__payout") }}'
+      - name: created_at
+        description: '{{ doc("created_at") }}'
+      - name: currency_code
+        description: '{{ doc("currency_code") }}'
   - name: int__settlements__dated_payouts
-    description: Grain payout_id. Payout with its UTC payout date.
+    description: One row per payout. Derives payout_date as the UTC date of paid_at.
+    columns:
+      - name: payout_id
+        description: '{{ doc("payout_id") }}'
+      - name: merchant_id
+        description: '{{ doc("merchant_id") }}'
+      - name: payout_date
+        description: '{{ doc("payout_date") }}'
+      - name: net_minor
+        description: '{{ doc("net_minor") }}'
   - name: int__settlements__payouts_by_day
-    description: Grain (payout_date, merchant_id). Provider payout count and net minor units.
+    description: One row per payout_date and merchant. Counts payouts and sums net_minor.
+    columns:
+      - name: payout_date
+        description: '{{ doc("payout_date") }}'
+      - name: merchant_id
+        description: '{{ doc("merchant_id") }}'
+      - name: payout_count
+        description: '{{ doc("payout_count") }}'
+      - name: net_minor
+        description: '{{ doc("net_minor") }}'
   - name: int__settlements__fees_by_payment
-    description: Provider fee per matched payment in original currency.
+    description: One row per payout with a matched payment attempt. Derives the fee as payment amount minus 
+      the payout's net amount.
+    columns:
+      - name: payment_id
+        description: '{{ doc("payment_id") }}'
+      - name: merchant_id
+        description: '{{ doc("merchant_id") }}'
+      - name: payout_date
+        description: '{{ doc("payout_date") }}'
+      - name: currency_code
+        description: '{{ doc("currency_code") }}'
+      - name: fee_amount
+        description: '{{ doc("fee_amount__derived") }}'
   - name: int__settlements__settlement_lag
-    description: Grain payout_id. Elapsed days from payment to payout.
+    description: One row per payout with a matched payment attempt. Computes days from attempt creation to 
+      payout.
+    columns:
+      - name: payout_id
+        description: '{{ doc("payout_id") }}'
+      - name: merchant_id
+        description: '{{ doc("merchant_id") }}'
+      - name: lag_days
+        description: '{{ doc("lag_days") }}'
   - name: int__settlements__unmatched_payouts
-    description: Grain payout_id. Payouts without a matching captured attempt.
+    description: One row per payout whose payment_id has no row in platform's fct__payment_attempts.
+    columns:
+      - name: payout_id
+        description: '{{ doc("payout_id") }}'
+      - name: payment_id
+        description: '{{ doc("payment_id") }}'
+      - name: merchant_id
+        description: '{{ doc("merchant_id") }}'
+      - name: paid_at
+        description: '{{ doc("paid_at") }}'

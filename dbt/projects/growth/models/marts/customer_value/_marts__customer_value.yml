@@ -1,13 +1,63 @@
 models:
   - name: fct__customer_spend
-    description: Customer gross spend in original currency.
+    description: One row per customer and currency. Lifetime completed order amount.
+    columns:
+      - name: customer_id
+        description: '{{ doc("customer_id") }}'
+      - name: currency_code
+        description: '{{ doc("currency_code") }}'
+      - name: gross_spend
+        description: '{{ doc("gross_spend") }}'
   - name: fct__cohort_value
-    description: Lifetime gross spend by acquisition cohort and currency.
+    description: One row per cohort_month and currency. Sums customer lifetime spend.
+    columns:
+      - name: cohort_month
+        description: '{{ doc("cohort_month") }}'
+      - name: currency_code
+        description: '{{ doc("currency_code") }}'
+      - name: gross_spend
+        description: '{{ doc("gross_spend") }}'
   - name: fct__high_value_customers
-    description: Customers with at least 1000 major units spent in one currency.
+    description: One row per customer and currency with gross_spend of at least 1000 major units.
+    columns:
+      - name: customer_id
+        description: '{{ doc("customer_id") }}'
+      - name: currency_code
+        description: '{{ doc("currency_code") }}'
+      - name: gross_spend
+        description: '{{ doc("gross_spend") }}'
   - name: fct__order_frequency_by_country
-    description: Average completed order count by customer country.
+    description: One row per customer country. Counts customers and averages completed orders.
+    columns:
+      - name: country_code
+        description: '{{ doc("country_code") }}'
+      - name: customers
+        description: '{{ doc("customers") }}'
+      - name: average_completed_orders
+        description: '{{ doc("average_completed_orders") }}'
   - name: fct__delivery_by_customer
-    description: Shipment and delay experience by customer.
+    description: One row per customer with a shipment. Shipment count, mean delivery days and delayed 
+      shipments.
+    columns:
+      - name: customer_id
+        description: '{{ doc("customer_id") }}'
+      - name: shipments
+        description: '{{ doc("shipments") }}'
+      - name: average_delivery_days
+        description: '{{ doc("average_delivery_days") }}'
+      - name: delayed_shipments
+        description: '{{ doc("delayed_shipments") }}'
   - name: fct__category_purchase_volume
-    description: Completed-order units and original-currency minor amount by product category and currency.
+    description: One row per category and currency. Sums units and minor-unit amounts of completed order 
+      lines.
+    columns:
+      - name: category_id
+        description: '{{ doc("category_id") }}'
+      - name: category_name
+        description: '{{ doc("category_name") }}'
+      - name: currency_code
+        description: '{{ doc("currency_code") }}'
+      - name: units_sold
+        description: '{{ doc("units_sold") }}'
+      - name: gross_amount_minor
+        description: '{{ doc("gross_amount_minor") }}'

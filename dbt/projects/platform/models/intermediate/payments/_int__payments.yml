@@ -1,44 +1,235 @@
 models:
   - name: int__payments__net_by_day
-    description: >
-      Gross, refunded and net settled amounts per (payment_date, merchant,
-      currency), in the original currency. Incremental (merge) on Trino,
-      rebuilt as a table on DuckDB; see materialization_for.
+    description: >-
+      One row per payment_date, merchant and currency. Sums settlement events in the original currency. Incremental
+      merge on Trino with a var('incremental_lookback_days') lookback on loaded_at; a table on DuckDB.
     data_tests:
       - unique:
           arguments:
             column_name: "cast(payment_date as varchar) || '-' || cast(merchant_id as varchar) || '-' || currency_code"
     columns:
+      - name: payment_date
+        description: '{{ doc("payment_date") }}'
+      - name: merchant_id
+        description: '{{ doc("merchant_id") }}'
+      - name: currency_code
+        description: '{{ doc("currency_code") }}'
+      - name: gross_amount
+        description: '{{ doc("gross_amount") }}'
+      - name: refunded_amount
+        description: '{{ doc("refunded_amount") }}'
+      - name: net_amount
+        description: '{{ doc("net_amount") }}'
       - name: max_loaded_at
-        description: Newest PSP load among the day's events; drives the incremental lookback.
+        description: '{{ doc("max_loaded_at") }}'
 
   - name: int__payments__succeeded_attempts
-    description: Grain payment_id. Successful payment attempts.
+    description: One row per succeeded payment attempt.
+    columns:
+      - name: payment_id
+        description: '{{ doc("payment_id") }}'
+      - name: order_id
+        description: '{{ doc("order_id") }}'
+      - name: currency_code
+        description: '{{ doc("currency_code") }}'
+      - name: amount_minor
+        description: '{{ doc("amount_minor") }}'
+      - name: amount
+        description: '{{ doc("amount") }}'
+      - name: payment_status
+        description: '{{ doc("payment_status") }}'
+      - name: created_at
+        description: '{{ doc("created_at") }}'
+      - name: loaded_at
+        description: '{{ doc("loaded_at") }}'
   - name: int__payments__failed_attempts
-    description: Grain payment_id. Failed payment attempts.
+    description: One row per failed payment attempt.
+    columns:
+      - name: payment_id
+        description: '{{ doc("payment_id") }}'
+      - name: order_id
+        description: '{{ doc("order_id") }}'
+      - name: currency_code
+        description: '{{ doc("currency_code") }}'
+      - name: amount_minor
+        description: '{{ doc("amount_minor") }}'
+      - name: amount
+        description: '{{ doc("amount") }}'
+      - name: payment_status
+        description: '{{ doc("payment_status") }}'
+      - name: created_at
+        description: '{{ doc("created_at") }}'
+      - name: loaded_at
+        description: '{{ doc("loaded_at") }}'
   - name: int__payments__attempts_with_merchant
-    description: Grain payment_id. Every payment attempt with its order's merchant.
+    description: One row per payment attempt with a known order. Inner-joins the order's merchant.
+    columns:
+      - name: payment_id
+        description: '{{ doc("payment_id") }}'
+      - name: order_id
+        description: '{{ doc("order_id") }}'
+      - name: merchant_id
+        description: '{{ doc("merchant_id") }}'
+      - name: currency_code
+        description: '{{ doc("currency_code") }}'
+      - name: amount
+        description: '{{ doc("amount") }}'
+      - name: payment_status
+        description: '{{ doc("payment_status") }}'
+      - name: created_at
+        description: '{{ doc("created_at") }}'
+      - name: loaded_at
+        description: '{{ doc("loaded_at") }}'
   - name: int__payments__succeeded_refunds
-    description: Grain refund_id. Successful refunds.
+    description: One row per succeeded refund.
+    columns:
+      - name: refund_id
+        description: '{{ doc("refund_id") }}'
+      - name: payment_id
+        description: '{{ doc("payment_id") }}'
+      - name: currency_code
+        description: '{{ doc("currency_code") }}'
+      - name: amount
+        description: '{{ doc("amount") }}'
+      - name: refunded_at
+        description: '{{ doc("refunded_at") }}'
+      - name: loaded_at
+        description: '{{ doc("loaded_at") }}'
   - name: int__payments__refunds_with_orders
-    description: Grain refund_id. Successful refund with its order and merchant.
+    description: One row per succeeded refund whose payment and order exist. Inner-joins order_id and 
+      merchant_id.
+    columns:
+      - name: refund_id
+        description: '{{ doc("refund_id") }}'
+      - name: payment_id
+        description: '{{ doc("payment_id") }}'
+      - name: order_id
+        description: '{{ doc("order_id") }}'
+      - name: merchant_id
+        description: '{{ doc("merchant_id") }}'
+      - name: currency_code
+        description: '{{ doc("currency_code") }}'
+      - name: amount
+        description: '{{ doc("amount") }}'
+      - name: refunded_at
+        description: '{{ doc("refunded_at") }}'
+      - name: loaded_at
+        description: '{{ doc("loaded_at") }}'
   - name: int__payments__succeeded_attempts_with_fees
-    description: Grain payment_id. Captured payment beside its provider fee in minor units.
+    description: One row per succeeded payment attempt with a PSP fee. Inner-joins fee_minor.
+    columns:
+      - name: payment_id
+        description: '{{ doc("payment_id") }}'
+      - name: order_id
+        description: '{{ doc("order_id") }}'
+      - name: currency_code
+        description: '{{ doc("currency_code") }}'
+      - name: amount
+        description: '{{ doc("amount") }}'
+      - name: fee_minor
+        description: '{{ doc("fee_minor") }}'
   - name: int__payments__fees_by_payment
-    description: Grain payment_id. Captured payment with provider fee in major units.
+    description: One row per succeeded payment with a fee. Converts fee_minor to major units.
+    columns:
+      - name: payment_id
+        description: '{{ doc("payment_id") }}'
+      - name: order_id
+        description: '{{ doc("order_id") }}'
+      - name: currency_code
+        description: '{{ doc("currency_code") }}'
+      - name: amount
+        description: '{{ doc("amount") }}'
+      - name: fee_minor
+        description: '{{ doc("fee_minor") }}'
+      - name: fee_amount
+        description: '{{ doc("fee_amount") }}'
   - name: int__payments__payment_settlement_events
-    description: >
-      Grain payment_id. A captured payment as a settlement event: gross and net
-      equal the amount, refunded is 0.
+    description: >-
+      One row per succeeded payment attempt with a known order. Maps it to a settlement event with gross and net
+      equal to amount.
+    columns:
+      - name: event_at
+        description: '{{ doc("event_at") }}'
+      - name: loaded_at
+        description: '{{ doc("loaded_at") }}'
+      - name: merchant_id
+        description: '{{ doc("merchant_id") }}'
+      - name: currency_code
+        description: '{{ doc("currency_code") }}'
+      - name: gross_amount
+        description: '{{ doc("gross_amount") }}'
+      - name: refunded_amount
+        description: '{{ doc("refunded_amount") }}'
+      - name: net_amount
+        description: '{{ doc("net_amount") }}'
   - name: int__payments__refund_settlement_events
-    description: >
-      Grain refund_id. A successful refund as a settlement event: refunded is
-      the amount, net is its negation, gross is 0.
+    description: >-
+      One row per succeeded refund with a known order. Maps it to a settlement event with refunded equal to amount
+      and negative net.
+    columns:
+      - name: event_at
+        description: '{{ doc("event_at") }}'
+      - name: loaded_at
+        description: '{{ doc("loaded_at") }}'
+      - name: merchant_id
+        description: '{{ doc("merchant_id") }}'
+      - name: currency_code
+        description: '{{ doc("currency_code") }}'
+      - name: gross_amount
+        description: '{{ doc("gross_amount") }}'
+      - name: refunded_amount
+        description: '{{ doc("refunded_amount") }}'
+      - name: net_amount
+        description: '{{ doc("net_amount") }}'
   - name: int__payments__settlement_events
-    description: Grain settlement event (payment or refund). Payment and refund events in one relation.
+    description: One row per settlement event. Unions payment and refund events.
+    columns:
+      - name: event_at
+        description: '{{ doc("event_at") }}'
+      - name: loaded_at
+        description: '{{ doc("loaded_at") }}'
+      - name: merchant_id
+        description: '{{ doc("merchant_id") }}'
+      - name: currency_code
+        description: '{{ doc("currency_code") }}'
+      - name: gross_amount
+        description: '{{ doc("gross_amount") }}'
+      - name: refunded_amount
+        description: '{{ doc("refunded_amount") }}'
+      - name: net_amount
+        description: '{{ doc("net_amount") }}'
   - name: int__payments__settlement_events_by_day
-    description: Grain settlement event. Event with its payment_date in var('business_timezone').
+    description: One row per settlement event. Assigns payment_date in var('business_timezone').
+    columns:
+      - name: payment_date
+        description: '{{ doc("payment_date") }}'
+      - name: merchant_id
+        description: '{{ doc("merchant_id") }}'
+      - name: currency_code
+        description: '{{ doc("currency_code") }}'
+      - name: gross_amount
+        description: '{{ doc("gross_amount") }}'
+      - name: refunded_amount
+        description: '{{ doc("refunded_amount") }}'
+      - name: net_amount
+        description: '{{ doc("net_amount") }}'
+      - name: loaded_at
+        description: '{{ doc("loaded_at") }}'
   - name: int__payments__net_by_day_with_rates
-    description: >
-      Grain (payment_date, merchant_id, currency_code). Daily net amounts beside the
-      reporting-currency rate for that day; rate_to_reporting is null when no usable rate exists.
+    description: >-
+      One row per payment_date, merchant and currency. Left-joins the day's rate to reporting currency.
+    columns:
+      - name: payment_date
+        description: '{{ doc("payment_date") }}'
+      - name: merchant_id
+        description: '{{ doc("merchant_id") }}'
+      - name: currency_code
+        description: '{{ doc("currency_code") }}'
+      - name: gross_amount
+        description: '{{ doc("gross_amount") }}'
+      - name: refunded_amount
+        description: '{{ doc("refunded_amount") }}'
+      - name: net_amount
+        description: '{{ doc("net_amount") }}'
+      - name: rate_to_reporting
+        description: '{{ doc("rate_to_reporting") }}'

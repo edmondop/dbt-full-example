@@ -204,6 +204,15 @@ model, its grain and any public contract, column tests or source definitions.
 `tooling/scripts/check_naming.py` enforces the folder size, names and YAML placement in
 CI. This is a layout rule for this example, not a dbt requirement.
 
+Model descriptions start with the grain (`One row per ...`) and name the
+operation. Every column points to a Markdown doc block with
+`description: '{{ doc("merchant_id") }}'`. The blocks live in
+`dbt/packages/marketplace_macros/docs/columns/`; all three projects install that
+package, so a column imported from platform resolves to the same definition in
+finance and growth. A block is named after its column. When one column name
+carries different values in different models, the variant block is named
+`<column>__<context>`, such as `rate_date__publication` for ECB publication dates.
+
 Model SQL lists its projected columns explicitly, including the import models
 under `staging/platform/`. The naming check rejects wildcard projections so a
 new column on a parent cannot silently widen a consumer relation.
