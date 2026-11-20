@@ -13,10 +13,32 @@ models:
         description: Newest PSP load among the day's events; drives the incremental lookback.
 
   - name: int__payments__succeeded_attempts
-    description: One row per successful payment attempt.
+    description: Grain payment_id. Successful payment attempts.
   - name: int__payments__failed_attempts
-    description: One row per failed payment attempt.
+    description: Grain payment_id. Failed payment attempts.
+  - name: int__payments__attempts_with_merchant
+    description: Grain payment_id. Every payment attempt with its order's merchant.
+  - name: int__payments__succeeded_refunds
+    description: Grain refund_id. Successful refunds.
   - name: int__payments__refunds_with_orders
-    description: One row per successful refund with its order and merchant.
+    description: Grain refund_id. Successful refund with its order and merchant.
+  - name: int__payments__succeeded_attempts_with_fees
+    description: Grain payment_id. Captured payment beside its provider fee in minor units.
   - name: int__payments__fees_by_payment
-    description: One row per captured payment with provider fee in major units.
+    description: Grain payment_id. Captured payment with provider fee in major units.
+  - name: int__payments__payment_settlement_events
+    description: >
+      Grain payment_id. A captured payment as a settlement event: gross and net
+      equal the amount, refunded is 0.
+  - name: int__payments__refund_settlement_events
+    description: >
+      Grain refund_id. A successful refund as a settlement event: refunded is
+      the amount, net is its negation, gross is 0.
+  - name: int__payments__settlement_events
+    description: Grain settlement event (payment or refund). Payment and refund events in one relation.
+  - name: int__payments__settlement_events_by_day
+    description: Grain settlement event. Event with its payment_date in var('business_timezone').
+  - name: int__payments__net_by_day_with_rates
+    description: >
+      Grain (payment_date, merchant_id, currency_code). Daily net amounts beside the
+      reporting-currency rate for that day; rate_to_reporting is null when no usable rate exists.

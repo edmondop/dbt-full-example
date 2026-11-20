@@ -1,0 +1,10 @@
+unit_tests:
+  - name: fct__completed_orders_net__nets_discount_in_major_units
+    model: fct__completed_orders_net
+    given:
+      - input: ref('int__orders__completed_with_discounts')
+        rows:
+          - {order_id: 1, customer_id: 2, merchant_id: 3, currency_code: USD, order_amount: 100, discount_amount_minor: 250, applied_discount_percent: 10}
+    expect:
+      rows:
+        - {order_id: 1, discount_amount_minor: 250, applied_discount_percent: 10, net_order_amount: 97.5}

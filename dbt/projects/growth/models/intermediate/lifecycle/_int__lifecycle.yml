@@ -1,11 +1,25 @@
 models:
-  - name: int__lifecycle__order_counts
-    description: Order counts per customer across all statuses.
-  - name: int__lifecycle__spend_by_currency
-    description: Completed gross spend by customer and original currency.
+  - name: int__lifecycle__shipment_delays
+    description: Grain shipment_id. Delivery days with delayed_shipment = 1 when delivery took more than 3 days.
   - name: int__lifecycle__delivery_experience
-    description: Shipment count and delivery experience per customer.
+    description: Grain customer_id. Shipment count and delivery experience per customer.
+  - name: int__lifecycle__order_counts
+    description: Grain customer_id. Order counts per customer across all statuses.
+  - name: int__lifecycle__customers_with_order_counts
+    description: Grain customer_id. Every customer with country and completed order count; null when the customer has no orders.
   - name: int__lifecycle__segments
-    description: Customer segment based on completed order count.
+    description: Grain customer_id. Customer segment based on completed order count.
+  - name: int__lifecycle__spend_by_currency
+    description: Grain (customer_id, currency_code). Completed gross spend in original currency.
   - name: int__lifecycle__repeat_purchase_days
-    description: Days from first to second distinct purchase day.
+    description: Grain customer_id. Days from first to second distinct purchase day.
+  - name: int__lifecycle__segment_delivery
+    description: Grain customer_id. Mean delivery days beside the customer's lifecycle segment; customers with shipments only.
+  - name: int__lifecycle__email_response_windows
+    description: >
+      Grain email_send_id. Send date and the last order date that counts as a
+      response, var('email_response_days') later.
+  - name: int__lifecycle__email_send_orders
+    description: >
+      Grain (email_send_id, order_id). Completed orders inside each send's
+      response window; one row with null order_id when there are none.

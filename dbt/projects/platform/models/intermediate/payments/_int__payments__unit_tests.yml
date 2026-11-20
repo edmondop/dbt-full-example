@@ -1,20 +1,35 @@
 unit_tests:
+  - name: int__payments__payment_settlement_events__keeps_succeeded_payments_only
+    model: int__payments__payment_settlement_events
+    given:
+      - input: ref('int__payments__attempts_with_merchant')
+        rows:
+          - {payment_id: py_1, merchant_id: 7, currency_code: EUR, amount: 100, payment_status: succeeded, created_at: "2025-03-01 09:00:00", loaded_at: "2025-03-01 09:05:00"}
+          - {payment_id: py_2, merchant_id: 7, currency_code: EUR, amount: 100, payment_status: failed, created_at: "2025-03-01 08:00:00", loaded_at: "2025-03-01 08:05:00"}
+    expect:
+      rows:
+        - {event_at: "2025-03-01 09:00:00", merchant_id: 7, currency_code: EUR, gross_amount: 100, refunded_amount: 0, net_amount: 100}
+
+  - name: int__payments__refund_settlement_events__nets_refund_out
+    model: int__payments__refund_settlement_events
+    given:
+      - input: ref('int__payments__refunds_with_orders')
+        rows:
+          - {refund_id: re_1, merchant_id: 7, currency_code: EUR, amount: 40, refunded_at: "2025-03-01 18:00:00", loaded_at: "2025-03-01 18:30:00"}
+    expect:
+      rows:
+        - {event_at: "2025-03-01 18:00:00", merchant_id: 7, currency_code: EUR, gross_amount: 0, refunded_amount: 40, net_amount: -40}
+
   - name: int__payments__net_by_day__nets_refunds_against_payments
     model: int__payments__net_by_day
     overrides:
       macros:
         is_incremental: false
     given:
-      - input: ref('stg__shop__orders')
+      - input: ref('int__payments__settlement_events_by_day')
         rows:
-          - {order_id: 1, merchant_id: 7}
-      - input: ref('stg__psp__payments')
-        rows:
-          - {payment_id: py_1, order_id: 1, currency_code: EUR, amount: 100, payment_status: succeeded, created_at: "2025-03-01 09:00:00", loaded_at: "2025-03-01 09:05:00"}
-          - {payment_id: py_2, order_id: 1, currency_code: EUR, amount: 100, payment_status: failed, created_at: "2025-03-01 08:00:00", loaded_at: "2025-03-01 08:05:00"}
-      - input: ref('stg__psp__refunds')
-        rows:
-          - {refund_id: re_1, payment_id: py_1, currency_code: EUR, amount: 40, refund_status: succeeded, refunded_at: "2025-03-01 18:00:00", loaded_at: "2025-03-01 18:30:00"}
+          - {payment_date: 2025-03-01, merchant_id: 7, currency_code: EUR, gross_amount: 100, refunded_amount: 0, net_amount: 100, loaded_at: "2025-03-01 09:05:00"}
+          - {payment_date: 2025-03-01, merchant_id: 7, currency_code: EUR, gross_amount: 0, refunded_amount: 40, net_amount: -40, loaded_at: "2025-03-01 18:30:00"}
     expect:
       rows:
         - {payment_date: 2025-03-01, merchant_id: 7, currency_code: EUR, gross_amount: 100, refunded_amount: 40, net_amount: 60}
@@ -34,17 +49,11 @@ unit_tests:
         rows:
           - {payment_date: 2025-03-05, merchant_id: 7, currency_code: EUR, gross_amount: 100, refunded_amount: 0, net_amount: 100, max_loaded_at: "2025-03-05 10:00:00"}
           - {payment_date: 2025-03-10, merchant_id: 7, currency_code: EUR, gross_amount: 50, refunded_amount: 0, net_amount: 50, max_loaded_at: "2025-03-10 12:00:00"}
-      - input: ref('stg__shop__orders')
+      - input: ref('int__payments__settlement_events_by_day')
         rows:
-          - {order_id: 1, merchant_id: 7}
-          - {order_id: 2, merchant_id: 7}
-      - input: ref('stg__psp__payments')
-        rows:
-          - {payment_id: py_old, order_id: 2, currency_code: EUR, amount: 30, payment_status: succeeded, created_at: "2025-03-01 09:00:00", loaded_at: "2025-03-01 09:05:00"}
-          - {payment_id: py_1, order_id: 1, currency_code: EUR, amount: 100, payment_status: succeeded, created_at: "2025-03-05 09:00:00", loaded_at: "2025-03-05 10:00:00"}
-      - input: ref('stg__psp__refunds')
-        rows:
-          - {refund_id: re_1, payment_id: py_1, currency_code: EUR, amount: 25, refund_status: succeeded, refunded_at: "2025-03-05 20:00:00", loaded_at: "2025-03-09 06:00:00"}
+          - {payment_date: 2025-03-01, merchant_id: 7, currency_code: EUR, gross_amount: 30, refunded_amount: 0, net_amount: 30, loaded_at: "2025-03-01 09:05:00"}
+          - {payment_date: 2025-03-05, merchant_id: 7, currency_code: EUR, gross_amount: 100, refunded_amount: 0, net_amount: 100, loaded_at: "2025-03-05 10:00:00"}
+          - {payment_date: 2025-03-05, merchant_id: 7, currency_code: EUR, gross_amount: 0, refunded_amount: 25, net_amount: -25, loaded_at: "2025-03-09 06:00:00"}
     expect:
       rows:
         - {payment_date: 2025-03-05, merchant_id: 7, currency_code: EUR, gross_amount: 100, refunded_amount: 25, net_amount: 75}
@@ -60,14 +69,21 @@ unit_tests:
     given:
       - input: this
         rows: []
-      - input: ref('stg__shop__orders')
+      - input: ref('int__payments__settlement_events_by_day')
         rows:
-          - {order_id: 1, merchant_id: 7}
-      - input: ref('stg__psp__payments')
-        rows:
-          - {payment_id: py_1, order_id: 1, currency_code: EUR, amount: 10, payment_status: succeeded, created_at: "2024-01-01 09:00:00", loaded_at: "2024-01-01 09:05:00"}
-      - input: ref('stg__psp__refunds')
-        rows: []
+          - {payment_date: 2024-01-01, merchant_id: 7, currency_code: EUR, gross_amount: 10, refunded_amount: 0, net_amount: 10, loaded_at: "2024-01-01 09:05:00"}
     expect:
       rows:
         - {payment_date: 2024-01-01, merchant_id: 7, currency_code: EUR, net_amount: 10}
+
+  - name: int__payments__net_by_day_with_rates__keeps_days_without_rate
+    model: int__payments__net_by_day_with_rates
+    given:
+      - input: ref('int__payments__net_by_day')
+        rows:
+          - {payment_date: 2025-03-01, merchant_id: 1, currency_code: GBP, gross_amount: 10, refunded_amount: 0, net_amount: 10}
+      - input: ref('int__fx_rates__rates_by_day')
+        rows: []
+    expect:
+      rows:
+        - {payment_date: 2025-03-01, merchant_id: 1, currency_code: GBP, net_amount: 10, rate_to_reporting: null}

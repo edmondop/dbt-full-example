@@ -36,7 +36,7 @@ models:
   - name: fct__delivery_attempts
     description: One row per carrier delivery attempt.
   - name: fct__delayed_shipments
-    description: Shipments delivered after the three-day operational target.
+    description: Grain shipment_id. Shipments delivered more than three days after shipping (the operational target).
   - name: dim__warehouses
     description: Warehouse locations.
   - name: fct__inventory_snapshot

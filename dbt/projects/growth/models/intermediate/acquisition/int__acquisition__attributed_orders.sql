@@ -1,15 +1,16 @@
 select
-    t.customer_id,
-    t.campaign_id,
-    t.channel,
-    o.order_id,
-    o.merchant_id,
+    windows.customer_id,
+    windows.campaign_id,
+    windows.channel,
+    orders.order_id,
+    orders.merchant_id,
     merchants.country_code as merchant_country_code,
-    o.order_date,
-    o.order_amount
-from {{ ref('int__acquisition__touchpoints') }} as t
-inner join {{ ref('stg__platform__orders') }} as o on t.customer_id = o.customer_id
-inner join {{ ref('stg__platform__merchants') }} as merchants on o.merchant_id = merchants.merchant_id
-where
-    o.order_status = 'completed'
-    and {{ dbt.datediff('t.attribution_date', 'o.order_date', 'day') }} between 0 and {{ var('attribution_lookback_days') }}  -- noqa: LT05
+    orders.order_date,
+    orders.order_amount
+from {{ ref('int__acquisition__attribution_windows') }} as windows
+inner join {{ ref('int__purchases__completed_orders') }} as orders
+    on
+        windows.customer_id = orders.customer_id
+        and orders.order_date between windows.attribution_date and windows.attribution_window_end
+inner join {{ ref('stg__platform__merchants') }} as merchants
+    on orders.merchant_id = merchants.merchant_id

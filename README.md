@@ -24,8 +24,8 @@ business-time-zone day boundaries, late arrivals and attribution windows.
 
 `tooling/generator/generate.py` produces the data deterministically (2,000 customers,
 50 merchants, 20,000 orders over 2024–2025) using the real ECB rates in
-`tooling/generator/reference/`. The default graph has 188 SQL models in 33 model
-folders; each populated folder has 5–9 models.
+`tooling/generator/reference/`. The default graph has 255 SQL models in 36 model
+folders; each populated folder has 5–13 models.
 
 Refund and payout events can fall in January 2026, after the supplied ECB file
 ends. Those rows keep a null USD value; the platform build reports the
@@ -144,16 +144,30 @@ finance or growth staging is a source boundary too: its models import one
 public platform contract each with `ref('platform', ...)`.
 
 Intermediate folders group transformations by **function or use case**. For
-example, platform has `orders`, `payments`, `fx`, `fulfillment` and `customers`;
-finance has `revenue`, `settlements`, `refunds` and `margin`. Mart folders group
+example, platform has `orders`, `payments`, `reference`, `fx_rates`,
+`fx_monitoring`, `fulfillment` and `customers`; finance has `revenue`, `settlements`, `refunds` and `margin`. Mart folders group
 consumer-facing relations by **reporting use case**, such as `revenue`,
 `profitability`, `acquisition` or `retention`. A mart area can contain several
 facts and dimensions at different documented grains.
 
-Each model owns one output relation with a stated grain and business purpose.
-For example, `int__payments__net_by_day` joins payment and refund events to
-produce one merchant-day-currency balance; its CTEs are steps in that single
-calculation. The folder count is a repository convention, not a reason to add
+Each model owns one output relation with a stated grain and performs one
+operation on its inputs:
+
+| Kind | May contain |
+|---|---|
+| map | renames, casts, row-level expressions and a `where` filter over one input |
+| join | columns from two or more joined inputs, column-to-column join conditions, no expressions |
+| aggregate | group keys and aggregate functions over one input, optionally cast to the declared type |
+| union | branches that project columns, literal tags or zero padding |
+| window | columns and window functions over one input |
+| generator | the `date_spine_days` macro |
+
+A calculation that needs several operations becomes a chain of models.
+`int__payments__net_by_day` sums `int__payments__settlement_events_by_day`, a
+map that assigns each event to its business day; that map reads
+`int__payments__settlement_events`, the union of payment and refund events.
+The incremental model keeps its `is_incremental()` filter because the filter
+reads `{{ this }}`. The folder count is a repository convention, not a reason to add
 models that duplicate a parent's output.
 
 ```

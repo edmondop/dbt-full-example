@@ -118,10 +118,10 @@ models:
         description: ISO currency code of the original amount or rate.
 
   - name: fct__completed_orders_net
-    description: Completed order grain with applied promotion and net amount in the order currency.
+    description: Grain order_id. Completed order with applied promotion and net amount in the order currency.
 
   - name: fct__customer_spend_by_currency
-    description: Gross completed-order spend per customer and original currency.
+    description: Grain (customer_id, currency_code). Gross completed-order spend per customer and original currency.
 
   - name: fct__customer_merchant_affinity
-    description: Completed order count per customer and merchant.
+    description: Grain (customer_id, merchant_id). Completed order count per customer and merchant.

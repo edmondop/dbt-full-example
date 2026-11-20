@@ -1,17 +1,23 @@
 models:
+  - name: int__orders__item_totals
+    description: Grain order_id. Sum of line amounts in minor units for orders with at least one item.
+  - name: int__orders__orders_with_item_totals
+    description: Grain order_id. Every order with its item total; order_amount_minor is null for orders without items.
   - name: int__orders__with_amounts
     description: >
-      Orders with their total in the order currency (major units) and the
+      Grain order_id. Orders with their total in the order currency (major units) and the
       order date in var('business_timezone').
     columns:
       - name: order_id
         data_tests: [unique, not_null]
 
   - name: int__orders__order_lines_with_products
-    description: One row per order line with catalog category and order currency.
+    description: Grain order line. Order line with catalog category and order currency.
   - name: int__orders__discounts_by_order
-    description: One row per discounted order.
+    description: Grain order_id. One row per discounted order.
   - name: int__orders__completed
-    description: One row per completed order with its gross amount.
-  - name: int__orders__with_discounts
-    description: One row per completed order after promotional discounts.
+    description: Grain order_id. One row per completed order with its gross amount.
+  - name: int__orders__completed_with_discounts
+    description: >
+      Grain order_id. Completed order beside its discount total and applied
+      promotion; discount columns are null when no discount applies.

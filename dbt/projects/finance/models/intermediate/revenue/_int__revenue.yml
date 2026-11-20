@@ -1,18 +1,35 @@
 models:
+  - name: int__revenue__completed_orders
+    description: Grain order_id. Platform orders with status `completed`, in original currency.
+  - name: int__revenue__completed_orders_with_rates
+    description: >
+      Grain order_id. Completed orders beside the order day's USD rate; rate_to_usd
+      is null when platform has no usable rate for that day.
   - name: int__revenue__orders_settled
-    description: Completed orders with their USD value at the order day's FX rate.
+    description: Grain order_id. Completed orders with their USD value at the order day's FX rate.
     access: private
     columns:
       - name: order_id
         data_tests: [unique, not_null]
-
-  - name: int__revenue__invoices_with_orders
-    description: Invoice grain with order ownership.
-  - name: int__revenue__invoice_lines_by_invoice
-    description: Line count and minor-unit total per invoice.
-  - name: int__revenue__taxed_orders
-    description: Completed order with estimated tax in original currency.
-  - name: int__revenue__invoice_balance
-    description: Invoice-grain billed, credited and adjusted amounts in original minor units.
+  - name: int__revenue__orders_settled_with_month
+    description: Grain order_id. Settled USD order value with its calendar revenue month.
   - name: int__revenue__monthly_by_merchant
-    description: Monthly merchant revenue in USD.
+    description: Grain (merchant_id, revenue_month). Completed orders and USD revenue.
+  - name: int__revenue__orders_settled_with_country
+    description: Grain order_id. Settled USD order value with the merchant's country.
+  - name: int__revenue__completed_orders_with_tax_rates
+    description: Grain order_id. Completed orders with the tax rate of the merchant's country.
+  - name: int__revenue__taxed_orders
+    description: Grain order_id. Completed order with estimated tax in original currency.
+  - name: int__revenue__invoices_with_orders
+    description: Grain invoice_id. Invoice with order ownership.
+  - name: int__revenue__invoice_lines_by_invoice
+    description: Grain invoice_id. Line count and minor-unit total.
+  - name: int__revenue__adjustments_by_invoice
+    description: Grain invoice_id. Sum of billing adjustments in minor units.
+  - name: int__revenue__invoices_with_amounts
+    description: >
+      Grain invoice_id. Invoiced, credited and adjusted minor units beside the
+      invoice; each amount is null when the invoice has none.
+  - name: int__revenue__invoice_balance
+    description: Grain invoice_id. Billed, credited and adjusted amounts in original minor units, absent amounts as 0.

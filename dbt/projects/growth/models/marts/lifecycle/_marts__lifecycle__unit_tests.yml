@@ -1,16 +1,12 @@
 unit_tests:
-  - name: fct__email_reengagement__uses_response_window
+  - name: fct__email_reengagement__counts_zero_for_sends_without_response
     model: fct__email_reengagement
-    overrides:
-      vars: {email_response_days: 30}
     given:
-      - input: ref('stg__marketing__email_sends')
+      - input: ref('int__lifecycle__email_send_orders')
         rows:
-          - {email_send_id: 1, customer_id: 7, sent_at: 2025-01-01}
-      - input: ref('stg__platform__orders')
-        rows:
-          - {order_id: 10, customer_id: 7, order_status: completed, order_date: 2025-01-31}
-          - {order_id: 11, customer_id: 7, order_status: completed, order_date: 2025-02-01}
+          - {email_send_id: 1, customer_id: 7, order_id: 10}
+          - {email_send_id: 2, customer_id: 8, order_id: null}
     expect:
       rows:
         - {email_send_id: 1, customer_id: 7, completed_orders_within_window: 1}
+        - {email_send_id: 2, customer_id: 8, completed_orders_within_window: 0}

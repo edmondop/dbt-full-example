@@ -1,0 +1,17 @@
+unit_tests:
+  - name: int__cohorts__cohort_activity_offsets__month_offset_is_calendar_based
+    description: >
+      A first order on 31 Jan and a repeat on 1 Feb are one day apart but one
+      calendar month apart, so the repeat counts toward month 1, not month 0.
+    model: int__cohorts__cohort_activity_offsets
+    given:
+      - input: ref('int__cohorts__cohort_activity')
+        rows:
+          - {customer_id: 1, cohort_month: 2025-01-01, activity_month: 2025-01-01}
+          - {customer_id: 1, cohort_month: 2025-01-01, activity_month: 2025-02-01}
+          - {customer_id: 2, cohort_month: 2025-01-01, activity_month: 2025-01-01}
+    expect:
+      rows:
+        - {customer_id: 1, cohort_month: 2025-01-01, months_since_first_order: 0}
+        - {customer_id: 1, cohort_month: 2025-01-01, months_since_first_order: 1}
+        - {customer_id: 2, cohort_month: 2025-01-01, months_since_first_order: 0}

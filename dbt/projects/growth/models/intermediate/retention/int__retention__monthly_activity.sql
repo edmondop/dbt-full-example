@@ -1,7 +1,6 @@
 select
     customer_id,
-    cast({{ dbt.date_trunc('month', 'order_date') }} as date) as activity_month,
+    order_month as activity_month,
     count(*) as completed_orders
-from {{ ref('stg__platform__orders') }}
-where order_status = 'completed'
-group by customer_id, cast({{ dbt.date_trunc('month', 'order_date') }} as date)
+from {{ ref('int__purchases__completed_orders') }}
+group by customer_id, order_month

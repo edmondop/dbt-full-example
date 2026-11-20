@@ -4,4 +4,5 @@ select
     merchant_id,
     delivery_days,
     failed_attempts
-from {{ ref('int__fulfillment__delayed_shipments') }}
+from {{ ref('int__fulfillment__shipments_with_delivery') }}
+where delivery_days > 3

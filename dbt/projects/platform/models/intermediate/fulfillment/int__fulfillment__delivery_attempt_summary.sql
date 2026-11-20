@@ -1,6 +1,6 @@
 select
     shipment_id,
     count(*) as attempt_count,
-    sum(case when outcome = 'failed' then 1 else 0 end) as failed_attempts
-from {{ ref('stg__fulfillment__delivery_attempts') }}
+    sum(is_failed_attempt) as failed_attempts
+from {{ ref('int__fulfillment__attempts_with_failure_flag') }}
 group by shipment_id
