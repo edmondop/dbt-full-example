@@ -71,15 +71,3 @@ revenue_usd − refunded_usd − fee_usd.
 {% docs report_date %}
 Date the USD movement is booked on: order_date for revenue, refund_date for refunds, payout_date for fees.
 {% enddocs %}
-
-{% docs gross_amount_usd %}
-gross_amount × fx_rate_to_usd.
-{% enddocs %}
-
-{% docs refunded_amount_usd %}
-refunded_amount × fx_rate_to_usd.
-{% enddocs %}
-
-{% docs net_amount_usd %}
-net_amount × fx_rate_to_usd; null when payment_date has no usable rate.
-{% enddocs %}

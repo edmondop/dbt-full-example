@@ -4,10 +4,6 @@ Platform reads the ECB reference export, which quotes units of each currency
 per 1 EUR on publication days. Cross rates into `var('reporting_currency')`
 divide the reporting currency's quote by the converted currency's quote.
 
-{% docs currency_code__fx %}
-ISO 4217 code of the currency the rate converts from.
-{% enddocs %}
-
 {% docs currency_code__country %}
 ISO 4217 code of the country's currency.
 {% enddocs %}
@@ -22,10 +18,6 @@ Units of the currency named by the column prefix per 1 EUR in the ECB export; nu
 
 {% docs rate_date__publication %}
 ECB publication date of the quote.
-{% enddocs %}
-
-{% docs rate_date %}
-Calendar date the rate applies to.
 {% enddocs %}
 
 {% docs units_per_eur %}
@@ -48,10 +40,6 @@ Units of the reporting currency per 1 unit of currency_code on the publication d
 rate_date when the ECB published currency_code on date_day; otherwise null.
 {% enddocs %}
 
-{% docs source_rate_date %}
-Latest ECB publication date on or before the day that quotes currency_code; null before the first publication.
-{% enddocs %}
-
 {% docs days_carried_forward %}
 Days from source_rate_date to the day the rate applies to.
 {% enddocs %}
@@ -66,14 +54,6 @@ rate_to_reporting published on source_rate_date, before the carry-forward limit 
 
 {% docs rate_to_reporting %}
 Units of the reporting currency per 1 unit of currency_code; null when days_carried_forward exceeds `var('fx_max_carry_forward_days')`.
-{% enddocs %}
-
-{% docs rate_to_usd %}
-USD per 1 unit of currency_code: rate_to_reporting under its v1 name, with the reporting currency asserted to be USD.
-{% enddocs %}
-
-{% docs fx_rate_to_usd %}
-USD per 1 unit of currency_code on payment_date; null when the day has no usable rate.
 {% enddocs %}
 
 {% docs currency_count %}
