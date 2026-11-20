@@ -1,23 +1,58 @@
 models:
   - name: fct__cohort_retention_by_month
-    description: >
-      Share of each monthly acquisition cohort with a completed order N
-      calendar months after their first one (N = 0 is always 100%).
+    description: >-
+      One row per cohort_month and months_since_first_order. Divides active customers by cohort size.
     access: protected
     config:
       contract: {enforced: true}
     columns:
-      - {name: cohort_month, data_type: date, constraints: [{type: not_null}]}
-      - {name: months_since_first_order, data_type: integer, constraints: [{type: not_null}]}
-      - {name: cohort_size, data_type: bigint}
-      - {name: active_customers, data_type: bigint}
-      - {name: retention_rate, data_type: "decimal(9, 4)"}
-
+      - name: cohort_month
+        description: '{{ doc("cohort_month") }}'
+        data_type: date
+        constraints: [type: not_null]
+      - name: months_since_first_order
+        description: '{{ doc("months_since_first_order") }}'
+        data_type: integer
+        constraints: [type: not_null]
+      - name: cohort_size
+        description: '{{ doc("cohort_size") }}'
+        data_type: bigint
+      - name: active_customers
+        description: '{{ doc("active_customers") }}'
+        data_type: bigint
+      - name: retention_rate
+        description: '{{ doc("retention_rate") }}'
+        data_type: "decimal(9, 4)"
   - name: fct__monthly_active_customers
-    description: Distinct purchasing customers per month.
+    description: One row per calendar month. Active customers; months without orders get 0.
+    columns:
+      - name: activity_month
+        description: '{{ doc("activity_month") }}'
+      - name: active_customers
+        description: '{{ doc("active_customers") }}'
   - name: fct__dormant_customers
-    description: Customers beyond the configured dormancy window.
+    description: One row per customer whose last completed order is more than var('dormancy_days') days before
+      var('end_date').
+    columns:
+      - name: customer_id
+        description: '{{ doc("customer_id") }}'
+      - name: last_order_date
+        description: '{{ doc("last_order_date") }}'
   - name: fct__repeat_customers_by_cohort
-    description: Cohort customers with purchases in multiple months.
+    description: One row per cohort_month with a repeat customer. Counts repeat customers.
+    columns:
+      - name: cohort_month
+        description: '{{ doc("cohort_month") }}'
+      - name: repeat_customers
+        description: '{{ doc("repeat_customers") }}'
   - name: fct__cohort_revenue
-    description: Cohort gross amount by activity month and currency.
+    description: One row per cohort_month, activity_month and currency. Completed order amounts.
+    columns:
+      - name: cohort_month
+        description: '{{ doc("cohort_month") }}'
+      - name: activity_month
+        description: '{{ doc("activity_month") }}'
+      - name: currency_code
+        description: '{{ doc("currency_code") }}'
+      - name: gross_amount
+        description: '{{ doc("gross_amount__orders") }}'

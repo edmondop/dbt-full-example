@@ -6,20 +6,116 @@
 #   treated as protected to platform and rejected under dbt-loom.
 models:
   - name: stg__platform__orders
-    description: One order-grain import of platform's public order contract.
+    description: One row per order in any status. Imports platform's fct__orders.
     access: private
 
+    columns:
+      - name: order_id
+        description: '{{ doc("order_id") }}'
+      - name: customer_id
+        description: '{{ doc("customer_id") }}'
+      - name: merchant_id
+        description: '{{ doc("merchant_id") }}'
+      - name: order_date
+        description: '{{ doc("order_date") }}'
+      - name: order_status
+        description: '{{ doc("order_status") }}'
+      - name: currency_code
+        description: '{{ doc("currency_code") }}'
+      - name: order_amount
+        description: '{{ doc("order_amount") }}'
   - name: stg__platform__customers
-    description: One public customer dimension row per customer.
+    description: One row per customer. Imports country and signup date from platform's dim__customers.
+    columns:
+      - name: customer_id
+        description: '{{ doc("customer_id") }}'
+      - name: country_code
+        description: '{{ doc("country_code") }}'
+      - name: signup_date
+        description: '{{ doc("signup_date") }}'
   - name: stg__platform__merchants
-    description: One public merchant dimension row per merchant.
+    description: One row per merchant. Imports platform's dim__merchants.
+    columns:
+      - name: merchant_id
+        description: '{{ doc("merchant_id") }}'
+      - name: merchant_name
+        description: '{{ doc("merchant_name") }}'
+      - name: country_code
+        description: '{{ doc("country_code") }}'
+      - name: currency_code
+        description: '{{ doc("currency_code__merchant") }}'
+      - name: timezone
+        description: '{{ doc("timezone") }}'
   - name: stg__platform__calendar
-    description: One public calendar dimension row per date.
+    description: One row per calendar day. Imports platform's dim__calendar.
+    columns:
+      - name: date_day
+        description: '{{ doc("date_day") }}'
+      - name: month_start
+        description: '{{ doc("month_start") }}'
+      - name: calendar_year
+        description: '{{ doc("calendar_year") }}'
+      - name: iso_day_of_week
+        description: '{{ doc("iso_day_of_week") }}'
+      - name: is_weekend
+        description: '{{ doc("is_weekend") }}'
   - name: stg__platform__order_lines
-    description: One public order-line fact row per item.
+    description: One row per order line. Imports platform's fct__order_lines.
+    columns:
+      - name: order_item_id
+        description: '{{ doc("order_item_id") }}'
+      - name: order_id
+        description: '{{ doc("order_id") }}'
+      - name: sku
+        description: '{{ doc("sku") }}'
+      - name: category_id
+        description: '{{ doc("category_id") }}'
+      - name: quantity
+        description: '{{ doc("quantity") }}'
+      - name: line_amount_minor
+        description: '{{ doc("line_amount_minor") }}'
+      - name: currency_code
+        description: '{{ doc("currency_code") }}'
   - name: stg__platform__products
-    description: One public product dimension row per SKU.
+    description: One row per SKU. Imports platform's dim__products.
+    columns:
+      - name: sku
+        description: '{{ doc("sku") }}'
+      - name: category_id
+        description: '{{ doc("category_id") }}'
+      - name: category_name
+        description: '{{ doc("category_name") }}'
   - name: stg__platform__shipments
-    description: One public shipment fact row per shipment.
+    description: One row per shipment. Imports platform's fct__shipments.
+    columns:
+      - name: shipment_id
+        description: '{{ doc("shipment_id") }}'
+      - name: order_id
+        description: '{{ doc("order_id") }}'
+      - name: customer_id
+        description: '{{ doc("customer_id") }}'
+      - name: merchant_id
+        description: '{{ doc("merchant_id") }}'
+      - name: shipped_at
+        description: '{{ doc("shipped_at") }}'
+      - name: delivered_at
+        description: '{{ doc("delivered_at") }}'
+      - name: delivery_days
+        description: '{{ doc("delivery_days") }}'
   - name: stg__platform__payment_attempts
-    description: One public payment fact row per provider attempt.
+    description: One row per payment attempt. Imports platform's fct__payment_attempts.
+    columns:
+      - name: payment_id
+        description: '{{ doc("payment_id") }}'
+      - name: order_id
+        description: '{{ doc("order_id") }}'
+      - name: merchant_id
+        description: '{{ doc("merchant_id") }}'
+      - name: currency_code
+        description: '{{ doc("currency_code") }}'
+      - name: amount
+        description: '{{ doc("amount") }}'
+      - name: payment_status
+        description: '{{ doc("payment_status") }}'
+      - name: created_at
+        description: '{{ doc("created_at") }}'

@@ -5,6 +5,7 @@ profile: marketplace
 require-dbt-version: [">=1.12.0", "<1.13.0"]
 
 model-paths: ["models"]
+docs-paths: ["docs"]
 macro-paths: ["macros"]
 
 dispatch:

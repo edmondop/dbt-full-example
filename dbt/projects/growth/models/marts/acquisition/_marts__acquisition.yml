@@ -1,11 +1,60 @@
 models:
   - name: fct__campaign_reach
-    description: Impressions and clicks per campaign.
+    description: One row per campaign. Impression and click counts; campaigns without events get 0.
+    columns:
+      - name: campaign_id
+        description: '{{ doc("campaign_id") }}'
+      - name: channel
+        description: '{{ doc("channel") }}'
+      - name: impression_count
+        description: '{{ doc("impression_count") }}'
+      - name: click_count
+        description: '{{ doc("click_count") }}'
   - name: fct__channel_acquisition
-    description: Attributed customers and orders by channel.
+    description: One row per channel with an attributed order. Distinct attributed customers and orders.
+    columns:
+      - name: channel
+        description: '{{ doc("channel") }}'
+      - name: attributed_customers
+        description: '{{ doc("attributed_customers") }}'
+      - name: attributed_orders
+        description: '{{ doc("attributed_orders") }}'
   - name: fct__attributed_orders
-    description: Completed orders within the first-touch attribution window.
+    description: One row per attribution and completed order inside its window.
+    columns:
+      - name: customer_id
+        description: '{{ doc("customer_id") }}'
+      - name: campaign_id
+        description: '{{ doc("campaign_id") }}'
+      - name: channel
+        description: '{{ doc("channel") }}'
+      - name: order_id
+        description: '{{ doc("order_id") }}'
+      - name: merchant_id
+        description: '{{ doc("merchant_id") }}'
+      - name: merchant_country_code
+        description: '{{ doc("merchant_country_code") }}'
+      - name: order_date
+        description: '{{ doc("order_date") }}'
+      - name: order_amount
+        description: '{{ doc("order_amount") }}'
   - name: fct__campaign_click_through
-    description: Clicks divided by impressions for each campaign.
+    description: One row per campaign. Divides clicks by impressions.
+    columns:
+      - name: campaign_id
+        description: '{{ doc("campaign_id") }}'
+      - name: channel
+        description: '{{ doc("channel") }}'
+      - name: impression_count
+        description: '{{ doc("impression_count") }}'
+      - name: click_count
+        description: '{{ doc("click_count") }}'
+      - name: click_through_rate
+        description: '{{ doc("click_through_rate") }}'
   - name: fct__campaign_customers
-    description: Customers assigned to each first-touch campaign.
+    description: One row per campaign with an attribution. Counts distinct attributed customers.
+    columns:
+      - name: campaign_id
+        description: '{{ doc("campaign_id") }}'
+      - name: attributed_customers
+        description: '{{ doc("attributed_customers") }}'

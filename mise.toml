@@ -72,6 +72,10 @@ run = [
 description = "Enforce model naming and folder/YAML layout conventions"
 run = "uv run python tooling/scripts/check_naming.py"
 
+[tasks."check:docs"]
+description = "Keep each column doc block in the package or project that references it"
+run = "uv run python tooling/scripts/check_doc_blocks.py"
+
 [tasks."test:py"]
 description = "Unit tests for repository scripts"
 run = "uv run pytest -q"
@@ -87,6 +91,7 @@ run = """
 set -eu
 mise run load:duckdb
 mise run check:naming
+mise run check:docs
 mise run test:py
 for project in platform finance growth; do
   DBT_TARGET=duckdb PROJECT=$project mise run unit

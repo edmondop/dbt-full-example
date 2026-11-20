@@ -16,12 +16,51 @@ sources:
     description: Growth-owned acquisition and lifecycle events.
 models:
   - name: stg__marketing__campaigns
-    description: One acquisition campaign with its channel.
+    description: One row per campaign with its acquisition channel.
+    columns:
+      - name: campaign_id
+        description: '{{ doc("campaign_id") }}'
+      - name: channel
+        description: '{{ doc("channel") }}'
   - name: stg__marketing__ad_impressions
-    description: One customer impression per campaign.
+    description: One row per ad impression with its customer and campaign.
+    columns:
+      - name: impression_id
+        description: '{{ doc("impression_id") }}'
+      - name: customer_id
+        description: '{{ doc("customer_id") }}'
+      - name: campaign_id
+        description: '{{ doc("campaign_id") }}'
+      - name: occurred_at
+        description: '{{ doc("occurred_at") }}'
   - name: stg__marketing__ad_clicks
-    description: One customer click linked to an impression.
+    description: One row per ad click with its impression.
+    columns:
+      - name: click_id
+        description: '{{ doc("click_id") }}'
+      - name: impression_id
+        description: '{{ doc("impression_id") }}'
+      - name: customer_id
+        description: '{{ doc("customer_id") }}'
+      - name: occurred_at
+        description: '{{ doc("occurred_at") }}'
   - name: stg__marketing__email_sends
-    description: One lifecycle email delivery per customer.
+    description: One row per lifecycle email send.
+    columns:
+      - name: email_send_id
+        description: '{{ doc("email_send_id") }}'
+      - name: customer_id
+        description: '{{ doc("customer_id") }}'
+      - name: sent_at
+        description: '{{ doc("sent_at") }}'
   - name: stg__marketing__customer_attribution
-    description: One first-touch campaign attribution per customer.
+    description: One row per customer. Derives attribution_date as the UTC date of attributed_at.
+    columns:
+      - name: customer_id
+        description: '{{ doc("customer_id") }}'
+      - name: campaign_id
+        description: '{{ doc("campaign_id") }}'
+      - name: attributed_at
+        description: '{{ doc("attributed_at") }}'
+      - name: attribution_date
+        description: '{{ doc("attribution_date") }}'

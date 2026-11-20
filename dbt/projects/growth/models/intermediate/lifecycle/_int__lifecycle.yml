@@ -1,25 +1,98 @@
 models:
   - name: int__lifecycle__shipment_delays
-    description: Grain shipment_id. Delivery days with delayed_shipment = 1 when delivery took more than 3 days.
+    description: One row per shipment. Flags delivery_days greater than 3.
+    columns:
+      - name: shipment_id
+        description: '{{ doc("shipment_id") }}'
+      - name: customer_id
+        description: '{{ doc("customer_id") }}'
+      - name: delivery_days
+        description: '{{ doc("delivery_days") }}'
+      - name: delayed_shipment
+        description: '{{ doc("delayed_shipment") }}'
   - name: int__lifecycle__delivery_experience
-    description: Grain customer_id. Shipment count and delivery experience per customer.
+    description: One row per customer with a shipment. Counts shipments and delays, averages delivery days.
+    columns:
+      - name: customer_id
+        description: '{{ doc("customer_id") }}'
+      - name: shipments
+        description: '{{ doc("shipments") }}'
+      - name: average_delivery_days
+        description: '{{ doc("average_delivery_days") }}'
+      - name: delayed_shipments
+        description: '{{ doc("delayed_shipments") }}'
   - name: int__lifecycle__order_counts
-    description: Grain customer_id. Order counts per customer across all statuses.
+    description: One row per customer with an order. Counts all orders and completed orders.
+    columns:
+      - name: customer_id
+        description: '{{ doc("customer_id") }}'
+      - name: total_orders
+        description: '{{ doc("total_orders") }}'
+      - name: completed_orders
+        description: '{{ doc("completed_orders") }}'
   - name: int__lifecycle__customers_with_order_counts
-    description: Grain customer_id. Every customer with country and completed order count; null when the customer has no orders.
+    description: One row per customer. Left-joins completed order counts.
+    columns:
+      - name: customer_id
+        description: '{{ doc("customer_id") }}'
+      - name: country_code
+        description: '{{ doc("country_code") }}'
+      - name: completed_orders
+        description: '{{ doc("completed_orders") }}'
   - name: int__lifecycle__segments
-    description: Grain customer_id. Customer segment based on completed order count.
+    description: One row per customer. Assigns lifecycle_segment from completed order count.
+    columns:
+      - name: customer_id
+        description: '{{ doc("customer_id") }}'
+      - name: completed_orders
+        description: '{{ doc("completed_orders") }}'
+      - name: lifecycle_segment
+        description: '{{ doc("lifecycle_segment") }}'
   - name: int__lifecycle__spend_by_currency
-    description: Grain (customer_id, currency_code). Completed gross spend in original currency.
+    description: One row per customer and currency. Sums completed order amounts.
+    columns:
+      - name: customer_id
+        description: '{{ doc("customer_id") }}'
+      - name: currency_code
+        description: '{{ doc("currency_code") }}'
+      - name: gross_spend
+        description: '{{ doc("gross_spend") }}'
   - name: int__lifecycle__repeat_purchase_days
-    description: Grain customer_id. Days from first to second distinct purchase day.
+    description: One row per customer with a second completed order. Computes days from first to second order.
+    columns:
+      - name: customer_id
+        description: '{{ doc("customer_id") }}'
+      - name: days_to_second_order
+        description: '{{ doc("days_to_second_order") }}'
   - name: int__lifecycle__segment_delivery
-    description: Grain customer_id. Mean delivery days beside the customer's lifecycle segment; customers with shipments only.
+    description: One row per customer with a shipment. Inner-joins lifecycle_segment.
+    columns:
+      - name: customer_id
+        description: '{{ doc("customer_id") }}'
+      - name: lifecycle_segment
+        description: '{{ doc("lifecycle_segment") }}'
+      - name: average_delivery_days
+        description: '{{ doc("average_delivery_days") }}'
   - name: int__lifecycle__email_response_windows
-    description: >
-      Grain email_send_id. Send date and the last order date that counts as a
-      response, var('email_response_days') later.
+    description: >-
+      One row per email send. Adds var('email_response_days') to the UTC send date.
+    columns:
+      - name: email_send_id
+        description: '{{ doc("email_send_id") }}'
+      - name: customer_id
+        description: '{{ doc("customer_id") }}'
+      - name: sent_date
+        description: '{{ doc("sent_date") }}'
+      - name: response_window_end
+        description: '{{ doc("response_window_end") }}'
   - name: int__lifecycle__email_send_orders
-    description: >
-      Grain (email_send_id, order_id). Completed orders inside each send's
-      response window; one row with null order_id when there are none.
+    description: >-
+      One row per email send and completed order inside its response window; sends without an order keep one row
+      with null order_id.
+    columns:
+      - name: email_send_id
+        description: '{{ doc("email_send_id") }}'
+      - name: customer_id
+        description: '{{ doc("customer_id") }}'
+      - name: order_id
+        description: '{{ doc("order_id") }}'

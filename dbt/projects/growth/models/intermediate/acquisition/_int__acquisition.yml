@@ -1,19 +1,95 @@
 models:
   - name: int__acquisition__touchpoints
-    description: Grain customer_id. Customer first-touch campaign and channel.
+    description: One row per attributed customer whose campaign exists. Inner-joins the campaign's channel.
+    columns:
+      - name: customer_id
+        description: '{{ doc("customer_id") }}'
+      - name: campaign_id
+        description: '{{ doc("campaign_id") }}'
+      - name: channel
+        description: '{{ doc("channel") }}'
+      - name: attributed_at
+        description: '{{ doc("attributed_at") }}'
+      - name: attribution_date
+        description: '{{ doc("attribution_date") }}'
   - name: int__acquisition__attribution_windows
-    description: >
-      Grain customer_id. First touch with the last order date it can claim,
-      var('attribution_lookback_days') after the attribution date.
+    description: >-
+      One row per attributed customer. Adds var('attribution_lookback_days') to attribution_date.
+    columns:
+      - name: customer_id
+        description: '{{ doc("customer_id") }}'
+      - name: campaign_id
+        description: '{{ doc("campaign_id") }}'
+      - name: channel
+        description: '{{ doc("channel") }}'
+      - name: attribution_date
+        description: '{{ doc("attribution_date") }}'
+      - name: attribution_window_end
+        description: '{{ doc("attribution_window_end") }}'
   - name: int__acquisition__attributed_orders
-    description: Grain order_id. Completed orders within the configured first-touch attribution window.
+    description: One row per attribution and completed order inside its window. Inner-joins the merchant's 
+      country.
+    columns:
+      - name: customer_id
+        description: '{{ doc("customer_id") }}'
+      - name: campaign_id
+        description: '{{ doc("campaign_id") }}'
+      - name: channel
+        description: '{{ doc("channel") }}'
+      - name: order_id
+        description: '{{ doc("order_id") }}'
+      - name: merchant_id
+        description: '{{ doc("merchant_id") }}'
+      - name: merchant_country_code
+        description: '{{ doc("merchant_country_code") }}'
+      - name: order_date
+        description: '{{ doc("order_date") }}'
+      - name: order_amount
+        description: '{{ doc("order_amount") }}'
   - name: int__acquisition__channel_performance
-    description: Grain channel. Attributed customers and orders per acquisition channel.
+    description: One row per channel with an attributed order. Counts distinct customers and orders.
+    columns:
+      - name: channel
+        description: '{{ doc("channel") }}'
+      - name: attributed_customers
+        description: '{{ doc("attributed_customers") }}'
+      - name: attributed_orders
+        description: '{{ doc("attributed_orders") }}'
   - name: int__acquisition__impressions_by_campaign
-    description: Grain campaign_id. Campaign reach from impressions.
+    description: One row per campaign with an impression. Counts impressions and distinct customers.
+    columns:
+      - name: campaign_id
+        description: '{{ doc("campaign_id") }}'
+      - name: impression_count
+        description: '{{ doc("impression_count") }}'
+      - name: reached_customers
+        description: '{{ doc("reached_customers") }}'
   - name: int__acquisition__clicks_with_campaign
-    description: Grain click_id. Each click with the campaign of its impression.
+    description: One row per click with a known impression. Inner-joins the impression's campaign.
+    columns:
+      - name: click_id
+        description: '{{ doc("click_id") }}'
+      - name: customer_id
+        description: '{{ doc("customer_id") }}'
+      - name: campaign_id
+        description: '{{ doc("campaign_id") }}'
   - name: int__acquisition__clicks_by_campaign
-    description: Grain campaign_id. Campaign clicks linked to impressions.
+    description: One row per campaign with a click. Counts clicks and distinct clicking customers.
+    columns:
+      - name: campaign_id
+        description: '{{ doc("campaign_id") }}'
+      - name: click_count
+        description: '{{ doc("click_count") }}'
+      - name: clicking_customers
+        description: '{{ doc("clicking_customers") }}'
   - name: int__acquisition__campaign_reach_counts
-    description: Grain campaign_id. Every campaign with its impression and click counts; null where it has none.
+    description: One row per campaign. Left-joins impression and click counts.
+    columns:
+      - name: campaign_id
+        description: '{{ doc("campaign_id") }}'
+      - name: channel
+        description: '{{ doc("channel") }}'
+      - name: impression_count
+        description: '{{ doc("impression_count") }}'
+      - name: click_count
+        description: '{{ doc("click_count") }}'

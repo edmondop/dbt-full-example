@@ -1,15 +1,56 @@
 models:
   - name: int__fx_monitoring__currency_days_with_rates
-    description: >
-      Grain (reference calendar day, supported currency). Includes days with
-      no usable rate; rate_to_reporting is null there.
+    description: >-
+      One row per calendar day and reference currency. Left-joins the day's rate to reporting currency.
+    columns:
+      - name: date_day
+        description: '{{ doc("date_day") }}'
+      - name: currency_code
+        description: '{{ doc("currency_code__fx") }}'
+      - name: source_rate_date
+        description: '{{ doc("source_rate_date") }}'
+      - name: rate_to_reporting
+        description: '{{ doc("rate_to_reporting") }}'
   - name: int__fx_monitoring__coverage_by_day
-    description: Grain date_day. Supported currencies and how many of them have a usable rate.
+    description: One row per calendar day. Counts reference currencies and those with a usable rate.
+    columns:
+      - name: date_day
+        description: '{{ doc("date_day") }}'
+      - name: currency_count
+        description: '{{ doc("currency_count") }}'
+      - name: covered_currency_count
+        description: '{{ doc("covered_currency_count") }}'
   - name: int__fx_monitoring__publications_by_day
-    description: Grain rate_date. Number of currencies the ECB published on that date (EUR excluded).
+    description: One row per ECB publication date. Counts the currencies quoted.
+    columns:
+      - name: rate_date
+        description: '{{ doc("rate_date__publication") }}'
+      - name: published_currency_count
+        description: '{{ doc("published_currency_count") }}'
   - name: int__fx_monitoring__coverage_with_publications
-    description: Grain date_day. Coverage counts beside the publication count; null published count on non-publication days.
+    description: One row per calendar day. Left-joins the number of currencies the ECB published that day.
+    columns:
+      - name: date_day
+        description: '{{ doc("date_day") }}'
+      - name: currency_count
+        description: '{{ doc("currency_count") }}'
+      - name: covered_currency_count
+        description: '{{ doc("covered_currency_count") }}'
+      - name: published_currency_count
+        description: '{{ doc("published_currency_count") }}'
   - name: int__fx_monitoring__usable_rates
-    description: Grain (currency_code, rate_date). Days whose carry-forward policy yields a rate.
+    description: One row per rate_date and currency with a non-null rate_to_reporting.
+    columns:
+      - name: currency_code
+        description: '{{ doc("currency_code__fx") }}'
+      - name: rate_date
+        description: '{{ doc("rate_date") }}'
+      - name: rate_to_reporting
+        description: '{{ doc("rate_to_reporting") }}'
   - name: int__fx_monitoring__latest_rate_dates
-    description: Grain currency_code. Most recent day with a usable rate.
+    description: One row per currency with a usable rate. Takes the latest rate_date.
+    columns:
+      - name: currency_code
+        description: '{{ doc("currency_code__fx") }}'
+      - name: rate_date
+        description: '{{ doc("rate_date") }}'

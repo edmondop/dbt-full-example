@@ -28,56 +28,126 @@ sources:
 
 models:
   - name: stg__shop__customers
-    description: One row per customer.
+    description: One row per customer. Lowercases email and uppercases country.
     columns:
       - name: customer_id
+        description: '{{ doc("customer_id") }}'
         data_tests: [unique, not_null]
+      - name: email
+        description: '{{ doc("email") }}'
       - name: country_code
+        description: '{{ doc("country_code") }}'
         data_tests: [not_null]
-
+      - name: created_at
+        description: '{{ doc("created_at") }}'
+      - name: updated_at
+        description: '{{ doc("updated_at") }}'
   - name: stg__shop__merchants
-    description: One row per merchant, with its settlement currency and local timezone.
+    description: One row per merchant. Uppercases country and currency.
     columns:
       - name: merchant_id
+        description: '{{ doc("merchant_id") }}'
         data_tests: [unique, not_null]
+      - name: merchant_name
+        description: '{{ doc("merchant_name") }}'
+      - name: country_code
+        description: '{{ doc("country_code") }}'
       - name: currency_code
+        description: '{{ doc("currency_code__merchant") }}'
         data_tests:
           - accepted_values:
               arguments:
                 values: [EUR, GBP, USD, JPY]
 
+      - name: timezone
+        description: '{{ doc("timezone") }}'
+      - name: created_at
+        description: '{{ doc("created_at") }}'
   - name: stg__shop__orders
-    description: One row per order. Amounts live on order items.
+    description: One row per order in any status. Uppercases currency.
     columns:
       - name: order_id
+        description: '{{ doc("order_id") }}'
         data_tests: [unique, not_null]
       - name: customer_id
+        description: '{{ doc("customer_id") }}'
         data_tests:
           - relationships:
               arguments:
                 to: ref('stg__shop__customers')
                 field: customer_id
+      - name: merchant_id
+        description: '{{ doc("merchant_id") }}'
+      - name: currency_code
+        description: '{{ doc("currency_code") }}'
       - name: order_status
+        description: '{{ doc("order_status") }}'
         data_tests:
           - accepted_values:
               arguments:
                 values: [completed, cancelled, pending]
 
+      - name: ordered_at
+        description: '{{ doc("ordered_at") }}'
+      - name: updated_at
+        description: '{{ doc("updated_at") }}'
   - name: stg__shop__order_items
-    description: One row per order line; prices stay in minor units until the order currency is joined.
+    description: One row per order line. Computes line_amount_minor as quantity × unit_price_minor.
     columns:
       - name: order_item_id
+        description: '{{ doc("order_item_id") }}'
         data_tests: [unique, not_null]
+      - name: order_id
+        description: '{{ doc("order_id") }}'
+      - name: sku
+        description: '{{ doc("sku") }}'
+      - name: quantity
+        description: '{{ doc("quantity") }}'
+      - name: unit_price_minor
+        description: '{{ doc("unit_price_minor") }}'
       - name: line_amount_minor
-        description: quantity * unit_price_minor
+        description: '{{ doc("line_amount_minor") }}'
 
   - name: stg__shop__categories
     description: One row per product category.
+    columns:
+      - name: category_id
+        description: '{{ doc("category_id") }}'
+      - name: category_name
+        description: '{{ doc("category_name") }}'
   - name: stg__shop__products
-    description: One row per catalog SKU with its category.
+    description: One row per SKU with its category.
+    columns:
+      - name: sku
+        description: '{{ doc("sku") }}'
+      - name: category_id
+        description: '{{ doc("category_id") }}'
   - name: stg__shop__inventory
-    description: One row per SKU and warehouse stock position.
+    description: One row per SKU and warehouse with units on hand.
+    columns:
+      - name: sku
+        description: '{{ doc("sku") }}'
+      - name: warehouse_id
+        description: '{{ doc("warehouse_id") }}'
+      - name: on_hand
+        description: '{{ doc("on_hand") }}'
   - name: stg__shop__promotions
-    description: One row per merchant promotion.
+    description: One row per promotion with its merchant and discount percent.
+    columns:
+      - name: promotion_id
+        description: '{{ doc("promotion_id") }}'
+      - name: merchant_id
+        description: '{{ doc("merchant_id") }}'
+      - name: discount_percent
+        description: '{{ doc("discount_percent") }}'
   - name: stg__shop__order_discounts
-    description: One row per order-level applied promotion.
+    description: One row per discount applied to an order.
+    columns:
+      - name: order_discount_id
+        description: '{{ doc("order_discount_id") }}'
+      - name: order_id
+        description: '{{ doc("order_id") }}'
+      - name: promotion_id
+        description: '{{ doc("promotion_id") }}'
+      - name: amount_minor
+        description: '{{ doc("amount_minor") }}'

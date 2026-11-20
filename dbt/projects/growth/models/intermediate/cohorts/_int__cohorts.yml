@@ -1,32 +1,116 @@
 models:
   - name: int__cohorts__first_order_dates
-    description: Grain customer_id. Date of the customer's first completed order.
+    description: One row per customer with a completed order. Takes the minimum order_date.
+    columns:
+      - name: customer_id
+        description: '{{ doc("customer_id") }}'
+      - name: first_order_date
+        description: '{{ doc("first_order_date") }}'
   - name: int__cohorts__first_order_by_customer
-    description: Grain customer_id. A customer's acquisition cohort is the month of their first completed order.
+    description: One row per customer with a completed order. Derives cohort_month from first_order_date.
     access: private
     columns:
       - name: customer_id
+        description: '{{ doc("customer_id") }}'
         data_tests: [unique, not_null]
-
+      - name: first_order_date
+        description: '{{ doc("first_order_date") }}'
+      - name: cohort_month
+        description: '{{ doc("cohort_month") }}'
   - name: int__cohorts__cohort_sizes
-    description: Grain cohort_month. New customers in each first-purchase month.
+    description: One row per cohort_month. Counts customers.
+    columns:
+      - name: cohort_month
+        description: '{{ doc("cohort_month") }}'
+      - name: cohort_size
+        description: '{{ doc("cohort_size") }}'
   - name: int__cohorts__order_months
-    description: Grain completed order. Order activity month, currency and amount beside the customer's cohort month.
+    description: One row per completed order. Inner-joins the customer's cohort_month.
+    columns:
+      - name: customer_id
+        description: '{{ doc("customer_id") }}'
+      - name: cohort_month
+        description: '{{ doc("cohort_month") }}'
+      - name: activity_month
+        description: '{{ doc("activity_month") }}'
+      - name: currency_code
+        description: '{{ doc("currency_code") }}'
+      - name: order_amount
+        description: '{{ doc("order_amount") }}'
   - name: int__cohorts__customer_active_months
-    description: Grain customer_id. Number of distinct calendar months with a completed order.
+    description: One row per customer. Counts distinct months with a completed order.
+    columns:
+      - name: customer_id
+        description: '{{ doc("customer_id") }}'
+      - name: cohort_month
+        description: '{{ doc("cohort_month") }}'
+      - name: active_months
+        description: '{{ doc("active_months") }}'
   - name: int__cohorts__repeat_customers
-    description: Grain customer_id. Cohort customers who bought in more than one month.
+    description: One row per customer with completed orders in more than one month.
+    columns:
+      - name: customer_id
+        description: '{{ doc("customer_id") }}'
+      - name: cohort_month
+        description: '{{ doc("cohort_month") }}'
+      - name: active_months
+        description: '{{ doc("active_months") }}'
   - name: int__cohorts__revenue_by_month
-    description: Grain (cohort_month, activity_month, currency_code). Cohort revenue in original currency.
+    description: One row per cohort_month, activity_month and currency. Sums completed order amounts.
+    columns:
+      - name: cohort_month
+        description: '{{ doc("cohort_month") }}'
+      - name: activity_month
+        description: '{{ doc("activity_month") }}'
+      - name: currency_code
+        description: '{{ doc("currency_code") }}'
+      - name: gross_amount
+        description: '{{ doc("gross_amount__orders") }}'
   - name: int__cohorts__cohort_spend
-    description: Grain (customer_id, currency_code). Customer gross spend beside the customer's cohort month.
+    description: One row per customer and currency. Inner-joins the customer's cohort_month.
+    columns:
+      - name: cohort_month
+        description: '{{ doc("cohort_month") }}'
+      - name: currency_code
+        description: '{{ doc("currency_code") }}'
+      - name: gross_spend
+        description: '{{ doc("gross_spend") }}'
   - name: int__cohorts__cohort_activity
-    description: Grain (customer_id, activity_month). Months with a completed order beside the customer's cohort month.
+    description: One row per customer and active month. Inner-joins the customer's cohort_month.
+    columns:
+      - name: customer_id
+        description: '{{ doc("customer_id") }}'
+      - name: cohort_month
+        description: '{{ doc("cohort_month") }}'
+      - name: activity_month
+        description: '{{ doc("activity_month") }}'
   - name: int__cohorts__cohort_activity_offsets
-    description: >
-      Grain (customer_id, activity_month). Calendar months between the cohort
-      month and the activity month; 0 for the first-order month.
+    description: >-
+      One row per customer and active month. Computes months since cohort_month.
+    columns:
+      - name: customer_id
+        description: '{{ doc("customer_id") }}'
+      - name: cohort_month
+        description: '{{ doc("cohort_month") }}'
+      - name: months_since_first_order
+        description: '{{ doc("months_since_first_order") }}'
   - name: int__cohorts__active_customers_by_offset
-    description: Grain (cohort_month, months_since_first_order). Distinct active cohort customers.
+    description: One row per cohort_month and months_since_first_order. Counts distinct active customers.
+    columns:
+      - name: cohort_month
+        description: '{{ doc("cohort_month") }}'
+      - name: months_since_first_order
+        description: '{{ doc("months_since_first_order") }}'
+      - name: active_customers
+        description: '{{ doc("active_customers") }}'
   - name: int__cohorts__retention_with_cohort_size
-    description: Grain (cohort_month, months_since_first_order). Active customers beside the cohort size.
+    description: One row per cohort_month and months_since_first_order. Inner-joins cohort_size.
+    columns:
+      - name: cohort_month
+        description: '{{ doc("cohort_month") }}'
+      - name: months_since_first_order
+        description: '{{ doc("months_since_first_order") }}'
+      - name: cohort_size
+        description: '{{ doc("cohort_size") }}'
+      - name: active_customers
+        description: '{{ doc("active_customers") }}'

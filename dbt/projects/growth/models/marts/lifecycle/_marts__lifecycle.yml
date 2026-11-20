@@ -1,15 +1,57 @@
 models:
   - name: fct__segment_counts
-    description: Customer count by purchase-frequency segment.
+    description: One row per lifecycle_segment. Counts customers.
+    columns:
+      - name: lifecycle_segment
+        description: '{{ doc("lifecycle_segment") }}'
+      - name: customers
+        description: '{{ doc("customers") }}'
   - name: fct__first_to_second_purchase
-    description: Elapsed days between first and second distinct purchase days.
+    description: One row per customer with a second completed order. Days from first to second order.
+    columns:
+      - name: customer_id
+        description: '{{ doc("customer_id") }}'
+      - name: days_to_second_order
+        description: '{{ doc("days_to_second_order") }}'
   - name: fct__order_count_distribution
-    description: Customer count by completed-order frequency.
+    description: One row per completed order count. Counts customers.
+    columns:
+      - name: completed_orders
+        description: '{{ doc("completed_orders") }}'
+      - name: customers
+        description: '{{ doc("customers") }}'
   - name: fct__customer_segments
-    description: Current purchase-frequency segment per customer.
+    description: One row per customer with completed order count and lifecycle_segment.
+    columns:
+      - name: customer_id
+        description: '{{ doc("customer_id") }}'
+      - name: completed_orders
+        description: '{{ doc("completed_orders") }}'
+      - name: lifecycle_segment
+        description: '{{ doc("lifecycle_segment") }}'
   - name: fct__delivery_experience_by_segment
-    description: Mean delivery time by customer segment.
+    description: One row per lifecycle_segment. Counts customers with shipments and averages their mean 
+      delivery days.
+    columns:
+      - name: lifecycle_segment
+        description: '{{ doc("lifecycle_segment") }}'
+      - name: customers
+        description: '{{ doc("customers") }}'
+      - name: average_delivery_days
+        description: '{{ doc("average_delivery_days") }}'
   - name: fct__customer_payment_failures
-    description: Failed provider payment attempts per customer.
+    description: One row per customer with a failed payment attempt. Counts failed attempts.
+    columns:
+      - name: customer_id
+        description: '{{ doc("customer_id") }}'
+      - name: failed_payment_attempts
+        description: '{{ doc("failed_payment_attempts") }}'
   - name: fct__email_reengagement
-    description: Completed orders within the configured number of days after each lifecycle email.
+    description: One row per email send. Counts completed orders inside the response window.
+    columns:
+      - name: email_send_id
+        description: '{{ doc("email_send_id") }}'
+      - name: customer_id
+        description: '{{ doc("customer_id") }}'
+      - name: completed_orders_within_window
+        description: '{{ doc("completed_orders_within_window") }}'

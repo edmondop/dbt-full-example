@@ -1,4 +1,5 @@
 packages:
   - local: ../../packages/marketplace_macros
+  - local: ../../packages/marketplace_docs
   - package: dbt-labs/dbt_project_evaluator
     version: 1.4.1

@@ -39,7 +39,7 @@ Repository paths separate the dbt graph from the tools that run the example:
 | Path | Contents |
 |---|---|
 | `dbt/projects/` | Independent platform, finance and growth dbt projects |
-| `dbt/packages/` | Shared marketplace macro package |
+| `dbt/packages/` | Shared marketplace macro and column-documentation packages |
 | `dbt/profiles.yml` | Shared local adapter profiles |
 | `tooling/generator/`, `tooling/loader/` | Deterministic source data and warehouse loading |
 | `tooling/scripts/`, `tooling/tests/` | Repository checks, slim CI and Python tests |
@@ -57,8 +57,9 @@ Three dbt projects, owned by three notional teams:
 | `finance` | billing feed; revenue, settlements, refunds and contribution | merchant and daily financial marts |
 | `growth` | marketing feed; acquisition, cohorts, retention and lifecycle | campaign, customer value and lifecycle marts |
 
-`dbt/packages/marketplace_macros` is an internal dbt package that all three
-install.
+All three install two internal dbt packages: `dbt/packages/marketplace_macros`
+for cross-engine macros and `dbt/packages/marketplace_docs` for column
+definitions the projects share.
 
 ## What it demonstrates
 
@@ -203,6 +204,19 @@ file may target only models in that folder. The properties file declares every
 model, its grain and any public contract, column tests or source definitions.
 `tooling/scripts/check_naming.py` enforces the folder size, names and YAML placement in
 CI. This is a layout rule for this example, not a dbt requirement.
+
+Model descriptions start with the grain (`One row per ...`) and name the
+operation. Every column points to a Markdown doc block with
+`description: '{{ doc("merchant_id") }}'`. dbt looks a block up in the
+current project, then in installed packages; dbt-loom imports platform's models
+but not its doc blocks. A block referenced by one project lives in that
+project's `docs/columns/`. A block referenced by two or more projects lives in
+`dbt/packages/marketplace_docs/docs/columns/`, so a column imported from
+platform resolves to the same definition in finance and growth.
+`tooling/scripts/check_doc_blocks.py` rejects a block stored in the wrong place.
+A block is named after its column. When one column name
+carries different values in different models, the variant block is named
+`<column>__<context>`, such as `rate_date__publication` for ECB publication dates.
 
 Model SQL lists its projected columns explicitly, including the import models
 under `staging/platform/`. The naming check rejects wildcard projections so a

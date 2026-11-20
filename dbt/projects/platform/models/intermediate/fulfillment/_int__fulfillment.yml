@@ -1,17 +1,104 @@
 models:
   - name: int__fulfillment__shipments_with_orders
-    description: Grain shipment_id. Shipment with order ownership.
+    description: One row per shipment with a known order. Inner-joins the order's customer, merchant and 
+      order_date.
+    columns:
+      - name: shipment_id
+        description: '{{ doc("shipment_id") }}'
+      - name: order_id
+        description: '{{ doc("order_id") }}'
+      - name: warehouse_id
+        description: '{{ doc("warehouse_id") }}'
+      - name: carrier_id
+        description: '{{ doc("carrier_id") }}'
+      - name: shipped_at
+        description: '{{ doc("shipped_at") }}'
+      - name: customer_id
+        description: '{{ doc("customer_id") }}'
+      - name: merchant_id
+        description: '{{ doc("merchant_id") }}'
+      - name: order_date
+        description: '{{ doc("order_date") }}'
   - name: int__fulfillment__events_with_delivery_time
-    description: Grain shipment event. delivered_event_at is event_at for delivery events, else null.
+    description: One row per shipment event. Copies event_at to delivered_event_at for `delivered` events.
+    columns:
+      - name: shipment_id
+        description: '{{ doc("shipment_id") }}'
+      - name: event_at
+        description: '{{ doc("event_at__shipment") }}'
+      - name: delivered_event_at
+        description: '{{ doc("delivered_event_at") }}'
   - name: int__fulfillment__shipment_event_summary
-    description: Grain shipment_id. First event and delivery time per shipment.
+    description: One row per shipment with an event. Takes the first event time, the latest delivery time and 
+      the event count.
+    columns:
+      - name: shipment_id
+        description: '{{ doc("shipment_id") }}'
+      - name: first_event_at
+        description: '{{ doc("first_event_at") }}'
+      - name: delivered_at
+        description: '{{ doc("delivered_at") }}'
+      - name: event_count
+        description: '{{ doc("event_count") }}'
   - name: int__fulfillment__attempts_with_failure_flag
-    description: Grain delivery attempt. is_failed_attempt is 1 for failed attempts, else 0.
+    description: One row per delivery attempt. Flags failed attempts with is_failed_attempt.
+    columns:
+      - name: shipment_id
+        description: '{{ doc("shipment_id") }}'
+      - name: is_failed_attempt
+        description: '{{ doc("is_failed_attempt") }}'
   - name: int__fulfillment__delivery_attempt_summary
-    description: Grain shipment_id. Attempted and failed deliveries per shipment.
+    description: One row per shipment with a delivery attempt. Counts attempts and failed attempts.
+    columns:
+      - name: shipment_id
+        description: '{{ doc("shipment_id") }}'
+      - name: attempt_count
+        description: '{{ doc("attempt_count") }}'
+      - name: failed_attempts
+        description: '{{ doc("failed_attempts") }}'
   - name: int__fulfillment__shipments_with_summaries
-    description: >
-      Grain shipment_id. Shipment beside its delivery time and failed-attempt
-      count; both are null when the shipment has no events or attempts.
+    description: >-
+      One row per shipment with a known order. Left-joins the event and delivery-attempt summaries.
+    columns:
+      - name: shipment_id
+        description: '{{ doc("shipment_id") }}'
+      - name: order_id
+        description: '{{ doc("order_id") }}'
+      - name: customer_id
+        description: '{{ doc("customer_id") }}'
+      - name: merchant_id
+        description: '{{ doc("merchant_id") }}'
+      - name: warehouse_id
+        description: '{{ doc("warehouse_id") }}'
+      - name: carrier_id
+        description: '{{ doc("carrier_id") }}'
+      - name: shipped_at
+        description: '{{ doc("shipped_at") }}'
+      - name: delivered_at
+        description: '{{ doc("delivered_at") }}'
+      - name: failed_attempts
+        description: '{{ doc("failed_attempts") }}'
   - name: int__fulfillment__shipments_with_delivery
-    description: Grain shipment_id. Shipment with delivery latency and failed attempts.
+    description: One row per shipment with a known order. Computes delivery_days and sets missing 
+      failed_attempts to 0.
+    columns:
+      - name: shipment_id
+        description: '{{ doc("shipment_id") }}'
+      - name: order_id
+        description: '{{ doc("order_id") }}'
+      - name: customer_id
+        description: '{{ doc("customer_id") }}'
+      - name: merchant_id
+        description: '{{ doc("merchant_id") }}'
+      - name: warehouse_id
+        description: '{{ doc("warehouse_id") }}'
+      - name: carrier_id
+        description: '{{ doc("carrier_id") }}'
+      - name: shipped_at
+        description: '{{ doc("shipped_at") }}'
+      - name: delivered_at
+        description: '{{ doc("delivered_at") }}'
+      - name: delivery_days
+        description: '{{ doc("delivery_days") }}'
+      - name: failed_attempts
+        description: '{{ doc("failed_attempts") }}'

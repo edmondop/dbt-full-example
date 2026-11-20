@@ -6,22 +6,130 @@
 #   treated as protected to platform and rejected under dbt-loom.
 models:
   - name: stg__platform__orders
-    description: One order-grain import of platform's public order contract.
+    description: One row per order in any status. Imports platform's fct__orders.
     access: private
+    columns:
+      - name: order_id
+        description: '{{ doc("order_id") }}'
+      - name: customer_id
+        description: '{{ doc("customer_id") }}'
+      - name: merchant_id
+        description: '{{ doc("merchant_id") }}'
+      - name: order_date
+        description: '{{ doc("order_date") }}'
+      - name: order_status
+        description: '{{ doc("order_status") }}'
+      - name: currency_code
+        description: '{{ doc("currency_code") }}'
+      - name: order_amount
+        description: '{{ doc("order_amount") }}'
   - name: stg__platform__fx_rates_by_day
-    description: Pinned to deprecated v1 of fct__fx_rates_by_day (column rate_to_usd).
+    description: One row per calendar day and quoted currency. Imports platform's fct__fx_rates_by_day pinned 
+      to v1.
     access: private
+    columns:
+      - name: rate_date
+        description: '{{ doc("rate_date") }}'
+      - name: currency_code
+        description: '{{ doc("currency_code__fx") }}'
+      - name: source_rate_date
+        description: '{{ doc("source_rate_date") }}'
+      - name: rate_to_usd
+        description: '{{ doc("rate_to_usd") }}'
   - name: stg__platform__payments_by_day__usd_total
-    description: Platform payment totals by business date, merchant and currency.
+    description: One row per payment_date, merchant and currency. Imports platform's 
+      fct__payments_by_day__usd_total.
     access: private
 
+    columns:
+      - name: payment_date
+        description: '{{ doc("payment_date") }}'
+      - name: merchant_id
+        description: '{{ doc("merchant_id") }}'
+      - name: currency_code
+        description: '{{ doc("currency_code") }}'
+      - name: gross_amount
+        description: '{{ doc("gross_amount") }}'
+      - name: refunded_amount
+        description: '{{ doc("refunded_amount") }}'
+      - name: net_amount
+        description: '{{ doc("net_amount") }}'
+      - name: fx_rate_to_usd
+        description: '{{ doc("fx_rate_to_usd") }}'
+      - name: gross_amount_usd
+        description: '{{ doc("gross_amount_usd") }}'
+      - name: refunded_amount_usd
+        description: '{{ doc("refunded_amount_usd") }}'
+      - name: net_amount_usd
+        description: '{{ doc("net_amount_usd") }}'
   - name: stg__platform__merchants
-    description: One public merchant dimension row per merchant.
+    description: One row per merchant. Imports platform's dim__merchants.
+    columns:
+      - name: merchant_id
+        description: '{{ doc("merchant_id") }}'
+      - name: merchant_name
+        description: '{{ doc("merchant_name") }}'
+      - name: country_code
+        description: '{{ doc("country_code") }}'
+      - name: currency_code
+        description: '{{ doc("currency_code__merchant") }}'
+      - name: timezone
+        description: '{{ doc("timezone") }}'
   - name: stg__platform__customers
-    description: One public customer dimension row per customer.
+    description: One row per customer. Imports country and signup date from platform's dim__customers.
+    columns:
+      - name: customer_id
+        description: '{{ doc("customer_id") }}'
+      - name: country_code
+        description: '{{ doc("country_code") }}'
+      - name: signup_date
+        description: '{{ doc("signup_date") }}'
   - name: stg__platform__refunds
-    description: One public refund fact row per refund.
+    description: One row per succeeded refund. Imports platform's fct__refunds.
+    columns:
+      - name: refund_id
+        description: '{{ doc("refund_id") }}'
+      - name: payment_id
+        description: '{{ doc("payment_id") }}'
+      - name: order_id
+        description: '{{ doc("order_id") }}'
+      - name: merchant_id
+        description: '{{ doc("merchant_id") }}'
+      - name: currency_code
+        description: '{{ doc("currency_code") }}'
+      - name: amount
+        description: '{{ doc("amount") }}'
+      - name: refunded_at
+        description: '{{ doc("refunded_at") }}'
   - name: stg__platform__payment_attempts
-    description: One public payment fact row per provider attempt.
+    description: One row per payment attempt. Imports platform's fct__payment_attempts.
+    columns:
+      - name: payment_id
+        description: '{{ doc("payment_id") }}'
+      - name: order_id
+        description: '{{ doc("order_id") }}'
+      - name: merchant_id
+        description: '{{ doc("merchant_id") }}'
+      - name: currency_code
+        description: '{{ doc("currency_code") }}'
+      - name: amount
+        description: '{{ doc("amount") }}'
+      - name: payment_status
+        description: '{{ doc("payment_status") }}'
+      - name: created_at
+        description: '{{ doc("created_at") }}'
   - name: stg__platform__payouts
-    description: One row per provider payout.
+    description: One row per payout. Imports platform's fct__payouts.
+    columns:
+      - name: payout_id
+        description: '{{ doc("payout_id") }}'
+      - name: merchant_id
+        description: '{{ doc("merchant_id") }}'
+      - name: payment_id
+        description: '{{ doc("payment_id") }}'
+      - name: paid_at
+        description: '{{ doc("paid_at") }}'
+      - name: net_minor
+        description: '{{ doc("net_minor") }}'
+      - name: currency_code
+        description: '{{ doc("currency_code") }}'

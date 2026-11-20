@@ -16,12 +16,45 @@ sources:
     description: Finance-owned invoices, credit notes, tax rates and adjustments.
 models:
   - name: stg__billing__invoices
-    description: One invoice per completed order.
+    description: One row per invoice with its order.
+    columns:
+      - name: invoice_id
+        description: '{{ doc("invoice_id") }}'
+      - name: order_id
+        description: '{{ doc("order_id") }}'
+      - name: issued_at
+        description: '{{ doc("issued_at") }}'
   - name: stg__billing__invoice_lines
-    description: One billed order line per invoice.
+    description: One row per invoice line.
+    columns:
+      - name: invoice_line_id
+        description: '{{ doc("invoice_line_id") }}'
+      - name: invoice_id
+        description: '{{ doc("invoice_id") }}'
+      - name: amount_minor
+        description: '{{ doc("amount_minor") }}'
   - name: stg__billing__credit_notes
-    description: One credit note per refunded payment.
+    description: One row per credit note.
+    columns:
+      - name: credit_note_id
+        description: '{{ doc("credit_note_id") }}'
+      - name: invoice_id
+        description: '{{ doc("invoice_id") }}'
+      - name: amount_minor
+        description: '{{ doc("amount_minor") }}'
   - name: stg__billing__tax_rates
-    description: One estimated tax rate per country.
+    description: One row per country with its tax rate.
+    columns:
+      - name: country_code
+        description: '{{ doc("country_code") }}'
+      - name: rate_percent
+        description: '{{ doc("rate_percent") }}'
   - name: stg__billing__adjustments
-    description: One manual invoice adjustment.
+    description: One row per invoice adjustment.
+    columns:
+      - name: adjustment_id
+        description: '{{ doc("adjustment_id") }}'
+      - name: invoice_id
+        description: '{{ doc("invoice_id") }}'
+      - name: amount_minor
+        description: '{{ doc("amount_minor") }}'
